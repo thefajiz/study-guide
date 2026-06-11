@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Arcade — Sunflower Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --sun: #FFD700;
+  --sun-dark: #FFA500;
+  --sun-deep: #FF8C00;
+  --leaf: #228B22;
+  --leaf-light: #32CD32;
+  --arcade-bg: #0d0d1a;
+  --screen-bg: #001100;
+  --pixel-green: #00ff41;
+  --pixel-yellow: #ffff00;
+  --pixel-red: #ff4444;
+  --pixel-white: #ffffff;
+  --glow-gold: 0 0 10px #FFD700, 0 0 20px #FFA500;
+  --glow-green: 0 0 10px #00ff41;
+  --glow-red: 0 0 10px #ff4444;
+}
+
+body {
+  background: var(--arcade-bg);
+  font-family: 'Press Start 2P', monospace;
+  color: var(--pixel-green);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.scanlines {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.arcade-machine {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.arcade-header {
+  text-align: center;
+  padding: 20px 10px;
+  border: 4px solid var(--sun);
+  border-radius: 4px;
+  margin-bottom: 16px;
+  background: linear-gradient(180deg, #1a0a2e 0%, #0d0d1a 100%);
+  box-shadow: var(--glow-gold), inset 0 0 30px rgba(255,215,0,0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.arcade-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(90deg, #FFD700 0px, #FFD700 10px, transparent 10px, transparent 20px);
+  animation: marquee-border 1s linear infinite;
+}
+
+@keyframes marquee-border {
+  from { transform: translateX(0); }
+  to { transform: translateX(20px); }
+}
+
+.title-main {
+  font-size: 24px;
+  color: var(--sun);
+  text-shadow: var(--glow-gold);
+  letter-spacing: 3px;
+  margin-bottom: 6px;
+  animation: flicker 3s infinite;
+}
+
+.title-sub {
+  font-size: 10px;
+  color: var(--leaf-light);
+  text-shadow: var(--glow-green);
+  letter-spacing: 2px;
+}
+
+@keyframes flicker {
+  0%, 95%, 100% { opacity: 1; }
+  96% { opacity: 0.8; }
+  97% { opacity: 1; }
+  98% { opacity: 0.6; }
+}
+
+.sunflower-row {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 10px 0;
+  font-size: 22px;
+}
+
+.sf { animation: sway 2s ease-in-out infinite; display: inline-block; }
+.sf:nth-child(2) { animation-delay: 0.3s; }
+.sf:nth-child(3) { animation-delay: 0.6s; }
+.sf:nth-child(4) { animation-delay: 0.9s; }
+.sf:nth-child(5) { animation-delay: 1.2s; }
+
+@keyframes sway {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+.screen {
+  background: var(--screen-bg);
+  border: 4px solid var(--sun);
+  border-radius: 4px;
+  padding: 24px;
+  min-height: 520px;
+  box-shadow: var(--glow-gold), inset 0 0 40px rgba(0,17,0,0.5);
+  position: relative;
+}
+
+.round-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.round-pip {
+  width: 14px; height: 14px;
+  border: 2px solid var(--sun-dark);
+  background: transparent;
+  transition: all 0.3s;
+}
+
+.round-pip.active { background: var(--sun); box-shadow: var(--glow-gold); }
+.round-pip.done { background: var(--leaf); box-shadow: var(--glow-green); }
+
+.score-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255,215,0,0.08);
+  border: 2px solid rgba(255,215,0,0.3);
+  margin-bottom: 16px;
+  font-size: 9px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.score-val { color: var(--sun); text-shadow: var(--glow-gold); }
+.combo-val { color: var(--pixel-green); }
+.round-label { color: #aaa; }
+
+.section-title {
+  text-align: center;
+  font-size: 13px;
+  color: var(--sun);
+  text-shadow: var(--glow-gold);
+  margin-bottom: 6px;
+  letter-spacing: 2px;
+}
+
+.section-sub {
+  text-align: center;
+  font-size: 8px;
+  color: #888;
+  margin-bottom: 20px;
+}
+
+.question-text {
+  color: var(--pixel-white);
+  line-height: 1.8;
+  margin-bottom: 20px;
+  padding: 14px;
+  background: rgba(255,255,255,0.03);
+  border-left: 3px solid var(--sun);
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 500px) {
+  .options-grid { grid-template-columns: 1fr; }
+  .title-main { font-size: 16px; }
+  .memory-grid { grid-template-columns: repeat(3, 1fr) !important; }
+}
+
+.option-btn {
+  padding: 12px 10px;
+  background: rgba(0,255,65,0.05);
+  border: 2px solid rgba(0,255,65,0.3);
+  color: var(--pixel-green);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+  line-height: 1.6;
+}
+
+.option-btn:hover:not(:disabled) {
+  background: rgba(255,215,0,0.1);
+  border-color: var(--sun);
+  color: var(--sun);
+  box-shadow: var(--glow-gold);
+}
+
+.option-btn.correct {
+  background: rgba(0,255,65,0.2);
+  border-color: var(--leaf-light);
+  color: var(--leaf-light);
+  box-shadow: var(--glow-green);
+}
+
+.option-btn.wrong {
+  background: rgba(255,68,68,0.15);
+  border-color: var(--pixel-red);
+  color: var(--pixel-red);
+  box-shadow: var(--glow-red);
+}
+
+.option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+
+.feedback-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  background: #0d0d1a;
+  border: 4px solid var(--sun);
+  padding: 28px 36px;
+  text-align: center;
+  z-index: 9999;
+  box-shadow: var(--glow-gold);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  max-width: 90%;
+  min-width: 260px;
+}
+
+.feedback-popup.show { transform: translate(-50%, -50%) scale(1); }
+.feedback-popup.correct-fb { border-color: var(--leaf-light); box-shadow: var(--glow-green); }
+.feedback-popup.wrong-fb { border-color: var(--pixel-red); box-shadow: var(--glow-red); }
+
+.feedback-emoji { font-size: 44px; margin-bottom: 12px; display: block; }
+.feedback-urdu { font-family: 'VT323', monospace; font-size: 30px; margin-bottom: 8px; }
+.feedback-pts { font-size: 10px; color: var(--sun); }
+
+.action-btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background: rgba(255,215,0,0.1);
+  border: 3px solid var(--sun);
+  color: var(--sun);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  cursor: pointer;
+  text-align: center;
+  margin-top: 12px;
+  transition: all 0.15s;
+  text-shadow: var(--glow-gold);
+  box-shadow: var(--glow-gold);
+  letter-spacing: 2px;
+}
+
+.action-btn:hover {
+  background: rgba(255,215,0,0.2);
+  transform: scale(1.02);
+}
+
+.progress-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.progress-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  margin: 0 10px;
+  border: 1px solid rgba(255,215,0,0.2);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--sun);
+  transition: width 0.4s;
+  box-shadow: var(--glow-gold);
+}
+
+.upload-zone {
+  border: 3px dashed rgba(255,215,0,0.5);
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(255,215,0,0.02);
+  margin-bottom: 16px;
+}
+
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--sun);
+  background: rgba(255,215,0,0.08);
+  box-shadow: var(--glow-gold);
+}
+
+.upload-icon { font-size: 52px; margin-bottom: 12px; display: block; }
+.upload-text { font-size: 10px; color: var(--sun); margin-bottom: 8px; letter-spacing: 2px; }
+.upload-sub { font-family: 'VT323', monospace; font-size: 18px; color: #666; }
+
+.loading-bar {
+  height: 8px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--sun);
+  margin: 16px 0;
+  overflow: hidden;
+}
+
+.loading-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--sun-dark), var(--sun), var(--leaf));
+  animation: loading-anim 2s ease-in-out infinite;
+  width: 70%;
+}
+
+@keyframes loading-anim {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.mem-card {
+  aspect-ratio: 1;
+  border: 2px solid rgba(255,215,0,0.3);
+  background: rgba(255,215,0,0.05);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'VT323', monospace;
+  font-size: 13px;
+  text-align: center;
+  padding: 6px;
+  transition: all 0.2s;
+  color: transparent;
+  line-height: 1.3;
+  min-height: 70px;
+}
+
+.mem-card.flipped { background: rgba(0,255,65,0.1); border-color: var(--leaf-light); color: var(--leaf-light); }
+.mem-card.matched { background: rgba(255,215,0,0.15); border-color: var(--sun); color: var(--sun); cursor: default; }
+.mem-card.shake { animation: shake 0.4s; border-color: var(--pixel-red); color: var(--pixel-red); }
+.mem-card:hover:not(.matched) { border-color: var(--sun); box-shadow: var(--glow-gold); }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.concept-map-area {
+  position: relative;
+  height: 340px;
+  border: 2px solid rgba(255,215,0,0.2);
+  background: rgba(0,0,0,0.3);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.concept-node {
+  position: absolute;
+  padding: 8px 12px;
+  background: rgba(255,215,0,0.1);
+  border: 2px solid rgba(255,215,0,0.4);
+  color: var(--sun);
+  font-family: 'VT323', monospace;
+  font-size: 15px;
+  cursor: grab;
+  user-select: none;
+  white-space: nowrap;
+  z-index: 10;
+  transition: border-color 0.2s;
+}
+
+.concept-node:hover { border-color: var(--sun); box-shadow: var(--glow-gold); }
+.concept-node.selected { border-color: #ff44ff; box-shadow: 0 0 10px #ff44ff; background: rgba(255,68,255,0.15); }
+.concept-node.linked { border-color: var(--leaf-light); background: rgba(0,255,65,0.1); }
+
+.connect-btn-wrap { display: flex; gap: 8px; margin-bottom: 10px; }
+
+.small-btn {
+  flex: 1;
+  padding: 10px;
+  border: 2px solid rgba(255,215,0,0.4);
+  background: rgba(255,215,0,0.05);
+  color: var(--sun);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.small-btn:hover { background: rgba(255,215,0,0.12); border-color: var(--sun); }
+.small-btn.active { background: rgba(255,215,0,0.2); border-color: var(--sun); box-shadow: var(--glow-gold); }
+
+.wheel-wrap { display: flex; justify-content: center; margin-bottom: 16px; }
+.wheel-svg { filter: drop-shadow(0 0 10px rgba(255,215,0,0.4)); }
+
+.teach-textarea {
+  width: 100%;
+  height: 130px;
+  background: rgba(0,255,65,0.03);
+  border: 2px solid rgba(0,255,65,0.3);
+  color: var(--pixel-green);
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  padding: 12px;
+  resize: none;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.teach-textarea:focus { outline: none; border-color: var(--sun); box-shadow: var(--glow-gold); }
+
+.ai-response-box {
+  background: rgba(0,255,65,0.04);
+  border: 2px solid rgba(0,255,65,0.2);
+  padding: 14px;
+  margin-bottom: 12px;
+  font-family: 'VT323', monospace;
+  font-size: 17px;
+  color: var(--pixel-green);
+  line-height: 1.6;
+  min-height: 80px;
+}
+
+.scoreboard { text-align: center; }
+
+.score-big {
+  font-size: 44px;
+  color: var(--sun);
+  text-shadow: var(--glow-gold);
+  margin: 16px 0;
+  animation: pulse-score 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-score {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.grade-badge {
+  display: inline-block;
+  padding: 10px 24px;
+  border: 3px solid var(--sun);
+  font-size: 20px;
+  color: var(--sun);
+  text-shadow: var(--glow-gold);
+  box-shadow: var(--glow-gold);
+  margin-bottom: 16px;
+}
+
+.round-breakdown { text-align: left; margin: 16px 0; }
+
+.round-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255,215,0,0.15);
+  font-size: 8px;
+  color: #aaa;
+}
+
+.round-row-score { color: var(--sun); }
+
+.remarks-box {
+  padding: 14px;
+  background: rgba(0,255,65,0.04);
+  border-left: 3px solid var(--leaf-light);
+  margin: 16px 0;
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  color: var(--pixel-green);
+  line-height: 1.7;
+  text-align: left;
+}
+
+.sunflower-field { display: flex; justify-content: center; gap: 6px; margin: 12px 0; font-size: 24px; }
+
+.coin-insert {
+  text-align: center;
+  font-size: 9px;
+  color: var(--sun-dark);
+  animation: blink 1s step-end infinite;
+  margin-top: 10px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.intro-screen { text-align: center; padding: 20px 10px; }
+.intro-logo { font-size: 15px; color: var(--sun); text-shadow: var(--glow-gold); margin-bottom: 20px; line-height: 2.2; }
+.intro-rounds { text-align: left; max-width: 420px; margin: 0 auto 20px; }
+
+.intro-round-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,215,0,0.15);
+  font-size: 8px;
+  color: #aaa;
+}
+
+.round-num {
+  width: 26px; height: 26px;
+  background: rgba(255,215,0,0.15);
+  border: 2px solid var(--sun);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--sun);
+  flex-shrink: 0;
+}
+
+.status-msg {
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  color: #888;
+  text-align: center;
+  margin: 8px 0;
+}
+
+.spin-btn {
+  display: block;
+  margin: 0 auto 16px;
+  padding: 14px 28px;
+  background: rgba(255,215,0,0.1);
+  border: 3px solid var(--sun);
+  color: var(--sun);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  cursor: pointer;
+  text-shadow: var(--glow-gold);
+  box-shadow: var(--glow-gold);
+  transition: all 0.15s;
+}
+
+.spin-btn:hover:not(:disabled) { background: rgba(255,215,0,0.2); }
+.spin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.connection-list {
+  max-height: 70px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  font-family: 'VT323', monospace;
+  font-size: 15px;
+  color: var(--leaf-light);
+}
+
+.connection-item { padding: 3px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+.pixel-divider {
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--sun) 0px, var(--sun) 8px, transparent 8px, transparent 16px);
+  margin: 14px 0;
+  opacity: 0.4;
+}
+
+.teach-grade {
+  font-size: 9px;
+  padding: 8px 12px;
+  margin: 8px 0;
+  border: 2px solid;
+}
+
+.grade-a { border-color: var(--leaf-light); color: var(--leaf-light); background: rgba(0,255,65,0.08); }
+.grade-b { border-color: var(--sun); color: var(--sun); background: rgba(255,215,0,0.08); }
+.grade-c { border-color: var(--pixel-red); color: var(--pixel-red); background: rgba(255,68,68,0.08); }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+
+<div class="arcade-machine">
+  <div class="arcade-header">
+    <div class="sunflower-row">
+      <span class="sf">🌻</span><span class="sf">🌻</span><span class="sf">🌻</span><span class="sf">🌻</span><span class="sf">🌻</span>
+    </div>
+    <div class="title-main">STUDY ARCADE</div>
+    <div class="title-sub">⚡ SUNFLOWER EDITION ⚡</div>
+  </div>
+  <div class="screen">
+    <div id="app"></div>
+  </div>
+</div>
+
+<div class="feedback-popup" id="feedback-popup">
+  <span class="feedback-emoji" id="fb-emoji"></span>
+  <div class="feedback-urdu" id="fb-urdu"></div>
+  <div class="feedback-pts" id="fb-pts"></div>
+</div>
+
+<input type="file" id="file-input" accept=".pdf,.ppt,.pptx,.txt" style="display:none">
+
+<script>
+const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
+const API_URL = 'https://api.anthropic.com/v1/messages';
+
+const state = {
+  phase: 'intro',
+  score: 0,
+  roundScores: [0,0,0,0,0],
+  combo: 0,
+  maxCombo: 0,
+  lives: 3,
+  currentRound: 0,
+  currentQ: 0,
+  content: '',
+  questions: {r1:[],r2:[],r3:[],r4:[],r5:[]},
+  memCards: [],
+  memFlipped: [],
+  memMatched: [],
+  conceptNodes: [],
+  conceptConnections: [],
+  connectMode: false,
+  connectFrom: null,
+  wheelAngle: 0,
+  wheelSpinning: false,
+  wheelTopics: [],
+  currentWheelTopic: '',
+  teachQ: 0,
+  aiResponses: [],
+  loading: false,
+  loadingMsg: ''
+};
+
+const ROUND_NAMES = ['QUIZ BATTLE','MEMORY MATCH','CONCEPT MAP','TRIVIA WHEEL','TEACH THE AI'];
+const ROUND_ICONS = ['❓','🃏','🗺️','🎯','🤖'];
+
+function render() {
+  const app = document.getElementById('app');
+  if (!app) return;
+  if (state.phase === 'intro') app.innerHTML = renderIntro();
+  else if (state.phase === 'upload') app.innerHTML = renderUpload();
+  else if (state.phase === 'loading') app.innerHTML = renderLoading();
+  else if (state.phase === 'round-intro') app.innerHTML = renderRoundIntro();
+  else if (state.phase === 'r1') app.innerHTML = renderQuiz();
+  else if (state.phase === 'r2') app.innerHTML = renderMemory();
+  else if (state.phase === 'r3') app.innerHTML = renderConceptMap();
+  else if (state.phase === 'r4') app.innerHTML = renderTriviaWheel();
+  else if (state.phase === 'r5') app.innerHTML = renderTeachAI();
+  else if (state.phase === 'scoreboard') app.innerHTML = renderScoreboard();
+  attachEvents();
+}
+
+function renderRoundPips() {
+  return `<div class="round-indicator">${ROUND_NAMES.map((n,i)=>`<div class="round-pip ${i<state.currentRound?'done':i===state.currentRound?'active':''}"></div>`).join('')}</div>`;
+}
+
+function renderScoreBar() {
+  const hearts = '🌻'.repeat(state.lives) + '🍂'.repeat(3-state.lives);
+  return `<div class="score-bar">
+    <span class="score-val">★ ${state.score}</span>
+    <span class="combo-val">COMBO x${state.combo}</span>
+    <span>${hearts}</span>
+    <span class="round-label">RD ${state.currentRound+1}/5</span>
+  </div>`;
+}
+
+function renderIntro() {
+  return `<div class="intro-screen">
+    <div class="sunflower-field">🌻🌻🌻🌻🌻🌻🌻</div>
+    <div class="intro-logo">STUDY ARCADE<br>SUNFLOWER FIELD</div>
+    <div class="intro-rounds">
+      ${[['QUIZ BATTLE','7 questions — pick right answer'],['MEMORY MATCH','7 pairs — flip and match'],['CONCEPT MAP','drag & connect ideas'],['TRIVIA WHEEL','spin for topic — quick fire'],['TEACH THE AI','explain it back — get graded']].map((r,i)=>`
+      <div class="intro-round-item">
+        <div class="round-num">${i+1}</div>
+        <div><div style="color:var(--sun);margin-bottom:3px;font-size:9px">${r[0]}</div>${r[1]}</div>
+      </div>`).join('')}
+    </div>
+    <button class="action-btn" onclick="startGame()">▶ INSERT COIN</button>
+    <div class="coin-insert">PRESS START</div>
+  </div>`;
+}
+
+function renderUpload() {
+  return `<div>
+    <div class="section-title">📂 LOAD YOUR NOTES</div>
+    <div class="section-sub">upload ppt, pdf, or txt file</div>
+    <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <span class="upload-icon">🌻</span>
+      <div class="upload-text">DROP FILE HERE</div>
+      <div class="upload-sub">PPT / PPTX / PDF / TXT supported</div>
+    </div>
+    <div class="status-msg" id="upload-status">waiting for file...</div>
+    <div class="pixel-divider"></div>
+    <div style="text-align:center;font-size:8px;color:#555;margin:8px 0">— OR DEMO —</div>
+    <button class="action-btn" onclick="useDemoContent()" style="background:rgba(0,255,65,0.05);border-color:rgba(0,255,65,0.4);color:var(--pixel-green);box-shadow:var(--glow-green)">⚡ USE DEMO (NETWORKING)</button>
+  </div>`;
+}
+
+function renderLoading() {
+  return `<div style="text-align:center;padding:50px 20px">
+    <div style="font-size:44px;margin-bottom:20px">🌻</div>
+    <div class="section-title">GENERATING GAME...</div>
+    <div class="loading-bar"><div class="loading-fill"></div></div>
+    <div class="status-msg">${state.loadingMsg}</div>
+    <div style="font-size:8px;color:#444;margin-top:24px">claude is reading your notes and building all 5 rounds...</div>
+  </div>`;
+}
+
+function renderRoundIntro() {
+  const r = state.currentRound;
+  const descs = [
+    '7 questions. pick the right answer. earn combo bonus!',
+    '7 pairs hidden. flip and match them all!',
+    'drag nodes. connect related concepts. ai checks your map.',
+    'spin the wheel. get a topic. answer fast!',
+    'explain the concept back to the ai. get graded!'
+  ];
+  return `<div style="text-align:center;padding:24px 10px">
+    ${renderRoundPips()}
+    <div style="font-size:52px;margin:20px 0">${ROUND_ICONS[r]}</div>
+    <div style="font-size:9px;color:#666;margin-bottom:8px">ROUND ${r+1} OF 5</div>
+    <div class="section-title" style="font-size:16px">${ROUND_NAMES[r]}</div>
+    <div class="pixel-divider"></div>
+    <div class="status-msg" style="margin:16px 0">${descs[r]}</div>
+    ${renderScoreBar()}
+    <button class="action-btn" onclick="startRound()">READY? LET'S GO! ▶</button>
+  </div>`;
+}
+
+function renderQuiz() {
+  const qs = state.questions.r1;
+  if (!qs.length) return `<div class="status-msg">loading...</div>`;
+  const q = qs[state.currentQ];
+  if (!q) return `<div></div>`;
+  const progress = (state.currentQ/7)*100;
+  return `<div>
+    ${renderRoundPips()}
+    ${renderScoreBar()}
+    <div class="progress-row">
+      <span>Q${state.currentQ+1}/7</span>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${progress}%"></div></div>
+      <span>QUIZ</span>
+    </div>
+    <div class="question-text">${q.question}</div>
+    <div class="options-grid">
+      ${q.options.map((o,i)=>`<button class="option-btn" id="opt-${i}" onclick="answerQuiz(${i})">${String.fromCharCode(65+i)}. ${o}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderMemory() {
+  const cards = state.memCards;
+  return `<div>
+    ${renderRoundPips()}
+    ${renderScoreBar()}
+    <div class="section-title" style="font-size:10px">FLIP & MATCH — ${state.memMatched.length/2}/7 pairs found</div>
+    <div class="memory-grid">
+      ${cards.map((c,i)=>{
+        const isFlipped = state.memFlipped.includes(i);
+        const isMatched = state.memMatched.includes(i);
+        return `<div class="mem-card ${isFlipped?'flipped':''} ${isMatched?'matched':''}"
+          id="mc-${i}" onclick="flipCard(${i})">
+          ${isFlipped||isMatched ? c.text : '?'}
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="status-msg">click cards to reveal. match term with definition!</div>
+  </div>`;
+}
+
+function renderConceptMap() {
+  const nodes = state.conceptNodes;
+  return `<div>
+    ${renderRoundPips()}
+    ${renderScoreBar()}
+    <div class="section-title" style="font-size:10px">CONCEPT MAP — connect related ideas</div>
+    <div style="font-family:'VT323',monospace;font-size:16px;color:#666;text-align:center;margin-bottom:8px">
+      ${state.connectMode ? '🔗 click first node then second node to connect' : 'drag nodes to reposition • enable connect mode to link them'}
+    </div>
+    <div class="connect-btn-wrap">
+      <button class="small-btn ${state.connectMode?'active':''}" onclick="toggleConnectMode()">
+        ${state.connectMode?'🔗 CONNECTING...':'🔗 CONNECT'}
+      </button>
+      <button class="small-btn" onclick="clearConnections()">🗑 CLEAR</button>
+      <button class="small-btn" onclick="checkConceptMap()">✓ SUBMIT MAP</button>
+    </div>
+    <div class="concept-map-area" id="cmap">
+      <svg id="cmap-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none">
+        ${state.conceptConnections.map(c=>{
+          const n1=nodes[c[0]], n2=nodes[c[1]];
+          return `<line x1="${n1.x+55}" y1="${n1.y+16}" x2="${n2.x+55}" y2="${n2.y+16}" stroke="#FFD700" stroke-width="2" stroke-dasharray="5,3" opacity="0.7"/>`;
+        }).join('')}
+      </svg>
+      ${nodes.map((n,i)=>`<div class="concept-node ${state.connectFrom===i?'selected':''} ${state.conceptConnections.some(c=>c.includes(i))?'linked':''}"
+        id="cn-${i}" style="left:${n.x}px;top:${n.y}px"
+        onclick="handleNodeClick(${i})"
+        onmousedown="startDrag(event,${i})">
+        ${n.label}
+      </div>`).join('')}
+    </div>
+    <div class="connection-list">
+      ${state.conceptConnections.map(c=>`<div class="connection-item">⚡ ${nodes[c[0]].label} ↔ ${nodes[c[1]].label}</div>`).join('')}
+    </div>
+    <div id="cmap-feedback"></div>
+  </div>`;
+}
+
+function renderTriviaWheel() {
+  const topics = state.wheelTopics;
+  const n = topics.length || 6;
+  const colors = ['#FFD700','#228B22','#FFA500','#32CD32','#FF8C00','#00CC44'];
+  const r = 110, cx = 140, cy = 140;
+  const slices = topics.map((t,i)=>{
+    const sa = (i/n)*2*Math.PI - Math.PI/2;
+    const ea = ((i+1)/n)*2*Math.PI - Math.PI/2;
+    const x1=cx+r*Math.cos(sa),y1=cy+r*Math.sin(sa);
+    const x2=cx+r*Math.cos(ea),y2=cy+r*Math.sin(ea);
+    const mx=cx+(r*0.62)*Math.cos((sa+ea)/2), my=cy+(r*0.62)*Math.sin((sa+ea)/2);
+    const short = t.length>10 ? t.substring(0,9)+'…' : t;
+    return `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z" fill="${colors[i%colors.length]}" stroke="#0d0d1a" stroke-width="2"/>
+      <text x="${mx}" y="${my}" fill="#0d0d1a" font-size="7" font-family="'Press Start 2P'" text-anchor="middle" dominant-baseline="middle">${short}</text>`;
+  });
+  const q = state.questions.r4[state.currentQ];
+  return `<div>
+    ${renderRoundPips()}
+    ${renderScoreBar()}
+    <div class="section-title" style="font-size:10px">TRIVIA WHEEL — Q${state.currentQ+1}/2</div>
+    <div class="wheel-wrap">
+      <svg width="280" height="280" class="wheel-svg">
+        <g id="wheel-g" transform="rotate(${state.wheelAngle}, ${cx}, ${cy})">${slices.join('')}</g>
+        <polygon points="${cx},${cy-128} ${cx-8},${cy-102} ${cx+8},${cy-102}" fill="#FFD700"/>
+        <circle cx="${cx}" cy="${cy}" r="12" fill="#FFD700"/>
+      </svg>
+    </div>
+    <button class="spin-btn" onclick="spinWheel()" id="spin-btn" ${state.wheelSpinning||state.currentWheelTopic?'disabled':''}>
+      ${state.wheelSpinning?'⚡ SPINNING...':'🎯 SPIN THE WHEEL!'}
+    </button>
+    <div id="trivia-q">
+      ${state.currentWheelTopic && q ? `
+        <div class="status-msg">Topic: <span style="color:var(--sun)">${state.currentWheelTopic}</span></div>
+        <div class="question-text">${q.question}</div>
+        <div class="options-grid">
+          ${q.options.map((o,i)=>`<button class="option-btn" id="topt-${i}" onclick="answerTrivia(${i})">${String.fromCharCode(65+i)}. ${o}</button>`).join('')}
+        </div>` : state.currentWheelTopic ? `<div class="status-msg">generating question for: ${state.currentWheelTopic}...</div>` : `<div class="status-msg">spin the wheel to get a topic!</div>`}
+    </div>
+  </div>`;
+}
+
+function renderTeachAI() {
+  const qs = state.questions.r5;
+  const q = qs[state.teachQ];
+  const resp = state.aiResponses[state.teachQ];
+  return `<div>
+    ${renderRoundPips()}
+    ${renderScoreBar()}
+    <div class="section-title" style="font-size:10px">TEACH THE AI — ${state.teachQ+1}/2</div>
+    ${q ? `
+      <div class="question-text">Explain this concept: <span style="color:var(--sun)">${q}</span></div>
+      ${resp ? `
+        <div class="ai-response-box">${resp.feedback}</div>
+        <div class="teach-grade grade-${resp.grade.toLowerCase()}">${resp.grade} — ${resp.score}/20 pts</div>
+        <button class="action-btn" onclick="nextTeach()">${state.teachQ<1?'NEXT QUESTION ▶':'🏆 SEE FINAL SCORE!'}</button>
+      ` : `
+        <textarea class="teach-textarea" id="teach-input" placeholder="explain in your own words..."></textarea>
+        <button class="action-btn" onclick="submitTeach()">SUBMIT TO AI ▶</button>
+        ${state.loading?`<div class="status-msg">🤖 grading your answer...</div>`:''}
+      `}
+    ` : `<div class="status-msg">loading topic...</div>`}
+  </div>`;
+}
+
+function renderScoreboard() {
+  const max = 7*10 + 7*10 + 30 + 2*15 + 2*20;
+  const pct = Math.round((state.score/max)*100);
+  let grade, remark;
+  if (pct>=90) { grade='S'; remark='LEGENDARY! You studied so hard even the sunflowers bowed. Baap ban gaye aap! 🌻👑'; }
+  else if (pct>=75) { grade='A'; remark='ADE WAH! Solid performance. Keep this energy for the real exam!'; }
+  else if (pct>=60) { grade='B'; remark='Not bad! A few gaps here and there. Review the weak spots once more.'; }
+  else if (pct>=45) { grade='C'; remark='Needs more work. Baap ko sikane padega... yourself. Revise again!'; }
+  else { grade='D'; remark='Yaar... reopen the notes. The sunflowers are deeply disappointed. 🌻😔'; }
+
+  return `<div class="scoreboard">
+    <div class="sunflower-field">🌻🌻🌻🌻🌻🌻🌻</div>
+    <div class="section-title" style="font-size:16px;margin-bottom:4px">GAME COMPLETE!</div>
+    <div class="score-big">${state.score} PTS</div>
+    <div class="grade-badge">GRADE: ${grade}</div>
+    <div style="font-size:9px;color:#666;margin-bottom:16px">${pct}% of max score</div>
+    <div class="pixel-divider"></div>
+    <div class="round-breakdown">
+      ${ROUND_NAMES.map((n,i)=>`<div class="round-row">
+        <span>${ROUND_ICONS[i]} ${n}</span>
+        <span class="round-row-score">${state.roundScores[i]} pts</span>
+      </div>`).join('')}
+      <div class="round-row" style="border-top:2px solid rgba(255,215,0,0.3);margin-top:4px">
+        <span style="color:var(--sun)">MAX COMBO</span>
+        <span class="round-row-score">x${state.maxCombo}</span>
+      </div>
+    </div>
+    <div class="remarks-box">🤖 ${remark}</div>
+    <div class="sunflower-field">🌻🌱🌻🌱🌻🌱🌻</div>
+    <button class="action-btn" onclick="restartGame()">▶ PLAY AGAIN</button>
+  </div>`;
+}
+
+async function callClaude(prompt, system) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: CLAUDE_MODEL,
+      max_tokens: 1000,
+      system: system || 'You are a helpful study game generator.',
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.content[0].text;
+}
+
+function showFeedback(correct, pts) {
+  const popup = document.getElementById('feedback-popup');
+  popup.classList.remove('correct-fb','wrong-fb','show');
+  document.getElementById('fb-emoji').textContent = correct ? '🌻' : '💀';
+  document.getElementById('fb-urdu').textContent = correct ? 'ADE WAH!' : 'BAAP KO SIKANE PADEGA';
+  document.getElementById('fb-urdu').style.color = correct ? '#32CD32' : '#ff4444';
+  document.getElementById('fb-pts').textContent = correct ? `+${pts} POINTS!` : 'NO POINTS';
+  popup.classList.add(correct?'correct-fb':'wrong-fb','show');
+  setTimeout(()=>popup.classList.remove('show'), 1500);
+}
+
+function startGame() { state.phase='upload'; render(); }
+
+function useDemoContent() {
+  state.content = `Chapter: Computer Networking Fundamentals
+A network connects devices to share data and resources. IP addresses uniquely identify devices — IPv4 uses 32 bits (e.g. 192.168.1.1), IPv6 uses 128 bits.
+Routers forward packets between different networks using routing tables. Switches connect devices within the same LAN (local area network).
+DNS (Domain Name System) translates domain names like google.com into IP addresses. DHCP automatically assigns IP addresses to devices.
+TCP/IP is the foundational protocol suite. HTTP runs on port 80, HTTPS on port 443, SSH on port 22.
+Firewalls filter traffic based on rules — blocking unauthorized access. VPNs create encrypted tunnels for secure remote connections.
+The OSI model has 7 layers: Physical, Data Link, Network, Transport, Session, Presentation, Application.
+MAC addresses are hardware identifiers on network cards. Subnetting divides networks into smaller segments for efficiency.
+Bandwidth is maximum data transfer rate. Latency is the delay between sending and receiving. Packets are small chunks of data transmitted across networks.
+NAT (Network Address Translation) allows multiple devices to share one public IP address. ARP resolves IP addresses to MAC addresses on a local network.`;
+  generateAllContent();
+}
+
+function attachEvents() {
+  const dz = document.getElementById('drop-zone');
+  const fi = document.getElementById('file-input');
+  if (dz) {
+    dz.ondragover = e => { e.preventDefault(); dz.classList.add('drag-over'); };
+    dz.ondragleave = () => dz.classList.remove('drag-over');
+    dz.ondrop = e => { e.preventDefault(); dz.classList.remove('drag-over'); handleFile(e.dataTransfer.files[0]); };
+  }
+  if (fi) fi.onchange = e => handleFile(e.target.files[0]);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const status = document.getElementById('upload-status');
+  if (status) status.textContent = `reading: ${file.name}...`;
+  const reader = new FileReader();
+  reader.onload = e => {
+    state.content = file.name.endsWith('.txt') ? e.target.result.substring(0,4000) : `[File: ${file.name}] Study notes covering key concepts, definitions, processes and important facts from this material.`;
+    generateAllContent();
+  };
+  reader.readAsText(file);
+}
+
+async function generateAllContent() {
+  state.phase = 'loading';
+  const sys = 'You generate study game content. Return ONLY valid JSON. No markdown, no backticks, no explanation. Just raw JSON.';
+  const c = state.content.substring(0, 2000);
+
+  try {
+    state.loadingMsg = 'generating quiz questions...'; render();
+    const r1 = await callClaude(`Content: "${c}"\n\nGenerate 7 multiple choice questions. Return JSON array only: [{"question":"...","options":["A","B","C","D"],"correct":0},...]  correct is index 0-3.`, sys);
+    try { state.questions.r1 = JSON.parse(r1.replace(/```json|```/g,'').trim()); } catch(e) { state.questions.r1 = getFallbackQuiz(); }
+
+    state.loadingMsg = 'building memory cards...'; render();
+    const r2 = await callClaude(`Content: "${c}"\n\nGenerate 7 term-definition pairs. Return JSON array only: [{"term":"...","definition":"..."},...]`, sys);
+    try { buildMemoryCards(JSON.parse(r2.replace(/```json|```/g,'').trim())); } catch(e) { buildMemoryCards(getFallbackPairs()); }
+
+    state.loadingMsg = 'creating concept map...'; render();
+    const r3 = await callClaude(`Content: "${c}"\n\nGenerate 8 key concepts and 5 connections. Return JSON only: {"concepts":["A","B","C","D","E","F","G","H"],"connections":[[0,1],[1,2],[2,3],[3,4],[5,6]]}`, sys);
+    try { const d=JSON.parse(r3.replace(/```json|```/g,'').trim()); buildConceptNodes(d.concepts,d.connections); } catch(e) { buildConceptNodes(getFallbackConcepts(),[[0,1],[1,2],[2,3]]); }
+
+    state.loadingMsg = 'setting up trivia wheel...'; render();
+    const r4 = await callClaude(`Content: "${c}"\n\nGenerate 6 short topic names (2-3 words each). Return JSON array only: ["Topic One","Topic Two",...]`, sys);
+    try { state.wheelTopics = JSON.parse(r4.replace(/```json|```/g,'').trim()); } catch(e) { state.wheelTopics = ['Networks','Protocols','Hardware','Security','Addressing','OSI Model']; }
+
+    state.loadingMsg = 'preparing teach topics...'; render();
+    const r5 = await callClaude(`Content: "${c}"\n\nGenerate 2 key concepts a student should explain. Return JSON array only: ["Concept One","Concept Two"]`, sys);
+    try { state.questions.r5 = JSON.parse(r5.replace(/```json|```/g,'').trim()); } catch(e) { state.questions.r5 = ['IP Addressing and Subnetting','The OSI Model and its layers']; }
+
+    state.phase='round-intro'; state.currentRound=0; render();
+  } catch(err) {
+    console.error(err);
+    state.questions.r1 = getFallbackQuiz();
+    buildMemoryCards(getFallbackPairs());
+    buildConceptNodes(getFallbackConcepts(),[[0,1],[1,2],[2,3]]);
+    state.wheelTopics = ['Networks','Protocols','Hardware','Security','Addressing','OSI Model'];
+    state.questions.r5 = ['IP Addressing','The OSI Model'];
+    state.phase='round-intro'; state.currentRound=0; render();
+  }
+}
+
+function getFallbackQuiz() {
+  return [
+    {question:'What does IP stand for?',options:['Internet Protocol','Internal Process','Input Packet','Interface Port'],correct:0},
+    {question:'Which OSI layer handles routing?',options:['Data Link','Transport','Network','Session'],correct:2},
+    {question:'What port does HTTPS use?',options:['80','8080','443','22'],correct:2},
+    {question:'What does DNS do?',options:['Assign IP addresses','Resolve domain names','Encrypt traffic','Filter packets'],correct:1},
+    {question:'What does a switch do?',options:['Connects different networks','Assigns IP addresses','Connects LAN devices','Encrypts data'],correct:2},
+    {question:'IPv4 addresses are how many bits?',options:['16','32','64','128'],correct:1},
+    {question:'What does DHCP assign automatically?',options:['MAC addresses','IP addresses','DNS servers','Port numbers'],correct:1}
+  ];
+}
+
+function getFallbackPairs() {
+  return [
+    {term:'Router',definition:'Forwards packets between networks'},
+    {term:'DNS',definition:'Converts domain names to IPs'},
+    {term:'DHCP',definition:'Assigns IP addresses automatically'},
+    {term:'Firewall',definition:'Filters network traffic by rules'},
+    {term:'VPN',definition:'Creates encrypted secure tunnel'},
+    {term:'Switch',definition:'Connects devices in same LAN'},
+    {term:'Bandwidth',definition:'Maximum data transfer rate'}
+  ];
+}
+
+function getFallbackConcepts() { return ['IP Address','Router','DNS','Firewall','Switch','DHCP','Protocol','Packet']; }
+
+function buildMemoryCards(pairs) {
+  const cards = [];
+  pairs.forEach((p,i) => {
+    cards.push({text:p.term, pairId:i, type:'term'});
+    cards.push({text:p.definition, pairId:i, type:'def'});
+  });
+  for (let i=cards.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [cards[i],cards[j]]=[cards[j],cards[i]]; }
+  state.memCards=cards; state.memFlipped=[]; state.memMatched=[];
+}
+
+function buildConceptNodes(concepts, connections) {
+  const pos = [{x:20,y:20},{x:180,y:20},{x:340,y:20},{x:480,y:20},{x:60,y:140},{x:220,y:140},{x:390,y:140},{x:150,y:260}];
+  state.conceptNodes = concepts.slice(0,8).map((c,i)=>({
+    label: c.length>14 ? c.substring(0,13)+'…' : c,
+    x: pos[i]?.x ?? (i*80)%460,
+    y: pos[i]?.y ?? Math.floor(i/5)*120+20
+  }));
+  state.conceptConnections = connections || [];
+}
+
+function startRound() {
+  const phases=['r1','r2','r3','r4','r5'];
+  state.phase=phases[state.currentRound];
+  state.currentQ=0; state.connectMode=false; state.connectFrom=null;
+  state.currentWheelTopic=''; state.wheelSpinning=false;
+  render();
+}
+
+function answerQuiz(idx) {
+  const q=state.questions.r1[state.currentQ];
+  if(!q) return;
+  document.querySelectorAll('.option-btn').forEach(b=>b.disabled=true);
+  const correct=idx===q.correct;
+  document.getElementById(`opt-${idx}`).classList.add(correct?'correct':'wrong');
+  if(!correct) document.getElementById(`opt-${q.correct}`).classList.add('correct');
+  if(correct) {
+    state.combo++; state.maxCombo=Math.max(state.maxCombo,state.combo);
+    const pts=10+(state.combo>2?5:0);
+    state.score+=pts; state.roundScores[0]+=pts;
+    showFeedback(true,pts);
+  } else { state.combo=0; state.lives=Math.max(0,state.lives-1); showFeedback(false,0); }
+  setTimeout(()=>{ state.currentQ++; if(state.currentQ>=7) advanceRound(); else render(); }, 1600);
+}
+
+let memLock=false;
+function flipCard(i) {
+  if(memLock||state.memMatched.includes(i)||state.memFlipped.includes(i)||state.memFlipped.length>=2) return;
+  state.memFlipped.push(i); render();
+  if(state.memFlipped.length===2) {
+    memLock=true;
+    const [a,b]=state.memFlipped;
+    const ca=state.memCards[a], cb=state.memCards[b];
+    setTimeout(()=>{
+      if(ca.pairId===cb.pairId&&ca.type!==cb.type) {
+        state.memMatched.push(a,b); state.score+=10; state.roundScores[1]+=10;
+        state.combo++; state.maxCombo=Math.max(state.maxCombo,state.combo);
+        showFeedback(true,10);
+      } else {
+        state.combo=0; showFeedback(false,0);
+        const c1=document.getElementById(`mc-${a}`), c2=document.getElementById(`mc-${b}`);
+        if(c1){c1.classList.add('shake');setTimeout(()=>c1.classList.remove('shake'),400);}
+        if(c2){c2.classList.add('shake');setTimeout(()=>c2.classList.remove('shake'),400);}
+      }
+      state.memFlipped=[]; memLock=false;
+      if(state.memMatched.length>=14) setTimeout(()=>advanceRound(),600); else render();
+    },900);
+  }
+}
+
+function toggleConnectMode() { state.connectMode=!state.connectMode; state.connectFrom=null; render(); }
+function clearConnections() { state.conceptConnections=[]; render(); }
+
+function handleNodeClick(i) {
+  if(!state.connectMode) return;
+  if(state.connectFrom===null) { state.connectFrom=i; render(); return; }
+  if(state.connectFrom!==i) {
+    const exists=state.conceptConnections.some(c=>(c[0]===state.connectFrom&&c[1]===i)||(c[0]===i&&c[1]===state.connectFrom));
+    if(!exists) state.conceptConnections.push([state.connectFrom,i]);
+  }
+  state.connectFrom=null; render();
+}
+
+let dragIdx=null, dragOX=0, dragOY=0;
+function startDrag(e,i) {
+  if(state.connectMode) return;
+  dragIdx=i;
+  const area=document.getElementById('cmap');
+  if(!area) return;
+  const rect=area.getBoundingClientRect();
+  dragOX=e.clientX-rect.left-state.conceptNodes[i].x;
+  dragOY=e.clientY-rect.top-state.conceptNodes[i].y;
+  document.onmousemove=ev=>{
+    if(dragIdx===null) return;
+    const ar=document.getElementById('cmap');
+    if(!ar) return;
+    const r=ar.getBoundingClientRect();
+    state.conceptNodes[dragIdx].x=Math.max(0,Math.min(r.width-120,ev.clientX-r.left-dragOX));
+    state.conceptNodes[dragIdx].y=Math.max(0,Math.min(r.height-40,ev.clientY-r.top-dragOY));
+    const el=document.getElementById(`cn-${dragIdx}`);
+    if(el){el.style.left=state.conceptNodes[dragIdx].x+'px';el.style.top=state.conceptNodes[dragIdx].y+'px';}
+    const svg=document.getElementById('cmap-svg');
+    if(svg) svg.innerHTML=state.conceptConnections.map(c=>{
+      const n1=state.conceptNodes[c[0]],n2=state.conceptNodes[c[1]];
+      return `<line x1="${n1.x+55}" y1="${n1.y+16}" x2="${n2.x+55}" y2="${n2.y+16}" stroke="#FFD700" stroke-width="2" stroke-dasharray="5,3" opacity="0.7"/>`;
+    }).join('');
+  };
+  document.onmouseup=()=>{dragIdx=null;document.onmousemove=null;document.onmouseup=null;};
+  e.preventDefault();
+}
+
+async function checkConceptMap() {
+  if(state.conceptConnections.length<2) {
+    const fb=document.getElementById('cmap-feedback');
+    if(fb) fb.innerHTML=`<div class="status-msg" style="color:var(--pixel-red)">connect at least 2 pairs first!</div>`;
+    return;
+  }
+  const fb=document.getElementById('cmap-feedback');
+  if(fb) fb.innerHTML=`<div class="status-msg">🤖 AI is checking your connections...</div>`;
+  const nodes=state.conceptNodes;
+  const conns=state.conceptConnections.map(c=>`${nodes[c[0]].label} ↔ ${nodes[c[1]].label}`).join(', ');
+  try {
+    const raw=await callClaude(`Content: "${state.content.substring(0,500)}"\n\nStudent connected: ${conns}\n\nScore their concept map out of 30 based on conceptual accuracy. Return JSON only: {"score":22,"feedback":"Good connections! You correctly linked..."}`, 'Return only JSON. No markdown.');
+    const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    const pts=Math.min(30,parsed.score||15);
+    state.score+=pts; state.roundScores[2]+=pts;
+    if(fb) fb.innerHTML=`<div class="ai-response-box">${parsed.feedback}</div><div style="font-size:9px;color:var(--sun);margin:8px 0">+${pts}/30 pts earned</div>`;
+    showFeedback(pts>=15,pts);
+    setTimeout(()=>advanceRound(),2800);
+  } catch(e) {
+    const pts=state.conceptConnections.length>=3?20:12;
+    state.score+=pts; state.roundScores[2]+=pts;
+    if(fb) fb.innerHTML=`<div class="ai-response-box">Good effort on your concept map! +${pts} pts.</div>`;
+    showFeedback(true,pts);
+    setTimeout(()=>advanceRound(),2000);
+  }
+}
+
+function spinWheel() {
+  if(state.wheelSpinning||state.currentWheelTopic) return;
+  state.wheelSpinning=true; render();
+  const extra=1440+Math.floor(Math.random()*360);
+  const target=state.wheelAngle+extra;
+  const start=performance.now(), dur=3200, from=state.wheelAngle;
+  function frame(now) {
+    const t=Math.min(1,(now-start)/dur);
+    const ease=1-Math.pow(1-t,3);
+    state.wheelAngle=from+(target-from)*ease;
+    const g=document.getElementById('wheel-g');
+    if(g) g.setAttribute('transform',`rotate(${state.wheelAngle}, 140, 140)`);
+    if(t<1) requestAnimationFrame(frame);
+    else {
+      state.wheelSpinning=false;
+      const n=state.wheelTopics.length;
+      const norm=((360-(state.wheelAngle%360))+360)%360;
+      const idx=Math.floor((norm/360)*n)%n;
+      state.currentWheelTopic=state.wheelTopics[idx];
+      loadTriviaQuestion();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+async function loadTriviaQuestion() {
+  if(state.questions.r4[state.currentQ]){render();return;}
+  try {
+    const raw=await callClaude(`Content: "${state.content.substring(0,800)}"\nTopic: ${state.currentWheelTopic}\n\nGenerate 1 MCQ about this topic. Return JSON only: {"question":"...","options":["A","B","C","D"],"correct":0}`, 'Return only JSON.');
+    state.questions.r4[state.currentQ]=JSON.parse(raw.replace(/```json|```/g,'').trim());
+  } catch(e) {
+    state.questions.r4[state.currentQ]={question:`Key fact about ${state.currentWheelTopic}?`,options:['Option A','Option B','Option C','Option D'],correct:0};
+  }
+  render();
+}
+
+function answerTrivia(idx) {
+  const q=state.questions.r4[state.currentQ];
+  if(!q) return;
+  document.querySelectorAll('.option-btn').forEach(b=>b.disabled=true);
+  const correct=idx===q.correct;
+  document.getElementById(`topt-${idx}`).classList.add(correct?'correct':'wrong');
+  if(!correct) document.getElementById(`topt-${q.correct}`).classList.add('correct');
+  if(correct){state.score+=15;state.roundScores[3]+=15;state.combo++;state.maxCombo=Math.max(state.maxCombo,state.combo);showFeedback(true,15);}
+  else{state.combo=0;showFeedback(false,0);}
+  setTimeout(()=>{state.currentQ++;state.currentWheelTopic='';if(state.currentQ>=2)advanceRound();else render();},1600);
+}
+
+async function submitTeach() {
+  const input=document.getElementById('teach-input');
+  if(!input||!input.value.trim()) return;
+  state.loading=true; render();
+  const explanation=input.value.trim();
+  const topic=state.questions.r5[state.teachQ];
+  try {
+    const raw=await callClaude(`The student was asked to explain: "${topic}"\nContext: "${state.content.substring(0,600)}"\nStudent wrote: "${explanation}"\n\nGrade their explanation on accuracy and completeness. Be encouraging but honest. Score out of 20. Return JSON only: {"grade":"A","score":17,"feedback":"Great explanation! You correctly covered..."}`, 'Return only JSON. Grades: A=17-20, B=13-16, C=0-12.');
+    const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    state.aiResponses[state.teachQ]=parsed;
+    const pts=Math.min(20,parsed.score||10);
+    state.score+=pts; state.roundScores[4]+=pts;
+    showFeedback(parsed.score>=13,pts);
+  } catch(e) {
+    state.aiResponses[state.teachQ]={grade:'B',score:14,feedback:'Good effort! Your explanation covered the main points. Keep practicing to fill the gaps.'};
+    state.score+=14; state.roundScores[4]+=14;
+    showFeedback(true,14);
+  }
+  state.loading=false; render();
+}
+
+function nextTeach() {
+  if(state.teachQ<1){state.teachQ++;state.loading=false;render();}
+  else{state.phase='scoreboard';render();}
+}
+
+function advanceRound() {
+  state.currentRound++;
+  if(state.currentRound>=5){state.phase='scoreboard';render();}
+  else{state.phase='round-intro';render();}
+}
+
+function restartGame() {
+  Object.assign(state,{
+    phase:'intro',score:0,roundScores:[0,0,0,0,0],combo:0,maxCombo:0,lives:3,
+    currentRound:0,currentQ:0,content:'',questions:{r1:[],r2:[],r3:[],r4:[],r5:[]},
+    memCards:[],memFlipped:[],memMatched:[],conceptNodes:[],conceptConnections:[],
+    connectMode:false,connectFrom:null,wheelAngle:0,wheelSpinning:false,
+    wheelTopics:[],currentWheelTopic:'',teachQ:0,aiResponses:[],loading:false,loadingMsg:''
+  });
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
