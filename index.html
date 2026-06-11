@@ -633,11 +633,12 @@ body {
 <input type="file" id="file-input" accept=".pdf,.ppt,.pptx,.txt" style="display:none">
 
 <script>
-const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
-const API_URL = 'https://api.anthropic.com/v1/messages';
+const CLAUDE_MODEL = 'anthropic/claude-sonnet-4-5';
+const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 const state = {
   phase: 'intro',
+  apiKey: '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',
   score: 0,
   roundScores: [0,0,0,0,0],
   combo: 0,
@@ -670,7 +671,8 @@ const ROUND_ICONS = ['❓','🃏','🗺️','🎯','🤖'];
 function render() {
   const app = document.getElementById('app');
   if (!app) return;
-  if (state.phase === 'intro') app.innerHTML = renderIntro();
+  if (state.phase === 'apikey') app.innerHTML = renderApiKey();
+  else if (state.phase === 'intro') app.innerHTML = renderIntro();
   else if (state.phase === 'upload') app.innerHTML = renderUpload();
   else if (state.phase === 'loading') app.innerHTML = renderLoading();
   else if (state.phase === 'round-intro') app.innerHTML = renderRoundIntro();
@@ -695,6 +697,35 @@ function renderScoreBar() {
     <span>${hearts}</span>
     <span class="round-label">RD ${state.currentRound+1}/5</span>
   </div>`;
+}
+
+function renderApiKey() {
+  return `<div class="intro-screen">
+    <div class="sunflower-field">🌻🌻🌻🌻🌻🌻🌻</div>
+    <div class="section-title" style="margin-bottom:8px">API KEY REQUIRED</div>
+    <div style="font-family:'VT323',monospace;font-size:17px;color:#888;margin-bottom:20px;line-height:1.6">
+      This app uses OpenRouter (free).<br>Get your key at <span style="color:var(--sun)">openrouter.ai/keys</span><br>
+      Your key stays in your browser only.
+    </div>
+    <input id="api-key-input" type="password" placeholder="sk-or-v1-..." value="${state.apiKey}"
+      style="width:100%;padding:12px;background:rgba(0,255,65,0.05);border:2px solid rgba(0,255,65,0.4);
+      color:var(--pixel-green);font-family:'VT323',monospace;font-size:18px;margin-bottom:12px;outline:none">
+    <div id="key-error" style="color:var(--pixel-red);font-size:8px;min-height:16px;margin-bottom:8px"></div>
+    <button class="action-btn" onclick="saveApiKey()">▶ START GAME</button>
+    <div style="font-size:7px;color:#444;margin-top:14px">key saved locally — won't be shared</div>
+  </div>`;
+}
+
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key.startsWith('sk-or-')) {
+    document.getElementById('key-error').textContent = 'must be an OpenRouter key (starts with sk-or-)';
+    return;
+  }
+  state.apiKey = key;
+  localStorage.setItem('or_api_key', key);
+  state.phase = 'intro';
+  render();
 }
 
 function renderIntro() {
@@ -938,17 +969,38 @@ function renderScoreboard() {
 async function callClaude(prompt, system) {
   const res = await fetch(API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${state.apiKey}`,
+      'HTTP-Referer': window.location.href,
+      'X-Title': 'Study Arcade'
+    },
     body: JSON.stringify({
       model: CLAUDE_MODEL,
       max_tokens: 1000,
-      system: system || 'You are a helpful study game generator.',
-      messages: [{ role: 'user', content: prompt }]
+      messages: [
+        { role: 'system', content: system || 'You are a helpful study game generator.' },
+        { role: 'user', content: prompt }
+      ]
     })
   });
   const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
-  return data.content[0].text;
+  if (data.error) {
+    // Rate limit
+    if (res.status === 429 || (data.error.message && data.error.message.includes('rate'))) {
+      throw new Error('RATE_LIMIT');
+    }
+    // Bad API key
+    if (res.status === 401) {
+      localStorage.removeItem('or_api_key');
+      state.apiKey = '';
+      state.phase = 'apikey';
+      render();
+      throw new Error('Invalid API key — please re-enter it.');
+    }
+    throw new Error(data.error.message || JSON.stringify(data.error));
+  }
+  return data.choices[0].message.content;
 }
 
 function showFeedback(correct, pts) {
@@ -992,13 +1044,28 @@ function attachEvents() {
 function handleFile(file) {
   if (!file) return;
   const status = document.getElementById('upload-status');
+  const ext = file.name.split('.').pop().toLowerCase();
   if (status) status.textContent = `reading: ${file.name}...`;
   const reader = new FileReader();
   reader.onload = e => {
-    state.content = file.name.endsWith('.txt') ? e.target.result.substring(0,4000) : `[File: ${file.name}] Study notes covering key concepts, definitions, processes and important facts from this material.`;
+    if (ext === 'txt') {
+      state.content = e.target.result.substring(0, 4000);
+    } else if (ext === 'pdf' || ext === 'ppt' || ext === 'pptx') {
+      // Extract readable text from binary — get printable ASCII runs
+      const raw = e.target.result;
+      const printable = raw.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/ {3,}/g, '  ').trim();
+      const words = printable.match(/[A-Za-z][A-Za-z0-9 ,.\-:;()'"%]{3,}/g) || [];
+      state.content = words.join(' ').substring(0, 4000);
+      if (state.content.length < 100) {
+        if (status) status.textContent = `⚠️ couldn't read much from ${file.name} — try exporting as .txt`;
+        state.content = `Study notes from: ${file.name}`;
+      }
+    } else {
+      state.content = e.target.result.substring(0, 4000);
+    }
     generateAllContent();
   };
-  reader.readAsText(file);
+  reader.readAsBinaryString(file);
 }
 
 async function generateAllContent() {
@@ -1030,6 +1097,13 @@ async function generateAllContent() {
     state.phase='round-intro'; state.currentRound=0; render();
   } catch(err) {
     console.error(err);
+    if (err.message === 'RATE_LIMIT') {
+      state.phase = 'upload';
+      render();
+      const status = document.getElementById('upload-status');
+      if (status) status.innerHTML = `<span style="color:var(--pixel-red)">⚠️ Rate limit hit — wait a few minutes and try again, or check your OpenRouter credits at openrouter.ai</span>`;
+      return;
+    }
     state.questions.r1 = getFallbackQuiz();
     buildMemoryCards(getFallbackPairs());
     buildConceptNodes(getFallbackConcepts(),[[0,1],[1,2],[2,3]]);
