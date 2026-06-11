@@ -12,7 +12,6 @@
 :root {
   --sun: #FFD700;
   --sun-dark: #FFA500;
-  --sun-deep: #FF8C00;
   --leaf: #228B22;
   --leaf-light: #32CD32;
   --arcade-bg: #0d0d1a;
@@ -27,25 +26,162 @@
 }
 
 body {
-  background: var(--arcade-bg);
+  background: #1a3a0a;
   font-family: 'Press Start 2P', monospace;
   color: var(--pixel-green);
   min-height: 100vh;
   overflow-x: hidden;
 }
 
+/* ===== SUNFLOWER FIELD BG ===== */
+#sunflower-field {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, #87CEEB 0%, #98D8E8 30%, #5a9e2f 30%, #3d7a1a 60%, #2d5e12 100%);
+  pointer-events: none;
+}
+
+/* Sky clouds */
+.cloud {
+  position: absolute;
+  background: rgba(255,255,255,0.7);
+  border-radius: 50px;
+  animation: cloudDrift linear infinite;
+}
+.cloud::before, .cloud::after {
+  content:'';
+  position:absolute;
+  background: rgba(255,255,255,0.7);
+  border-radius: 50%;
+}
+
+/* Grass */
+.grass-layer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 45%;
+  background: linear-gradient(180deg, #4a8e20 0%, #2d6010 100%);
+}
+
+/* Sun in sky */
+.sky-sun {
+  position: absolute;
+  top: 4%;
+  right: 8%;
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle, #FFE066 40%, #FFD700 70%, rgba(255,215,0,0) 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 30px 10px rgba(255,220,0,0.5);
+  animation: sunPulse 4s ease-in-out infinite;
+}
+
+@keyframes sunPulse {
+  0%,100%{box-shadow:0 0 30px 10px rgba(255,220,0,0.5);}
+  50%{box-shadow:0 0 50px 20px rgba(255,220,0,0.7);}
+}
+
+/* Sunflower plants */
+.sf-plant {
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sf-stem {
+  width: 5px;
+  background: linear-gradient(180deg, #4a7c1f, #2d5e12);
+  border-radius: 3px;
+  position: relative;
+}
+
+.sf-leaf-l, .sf-leaf-r {
+  position: absolute;
+  width: 18px;
+  height: 10px;
+  background: #3a7a18;
+  border-radius: 50% 10% 50% 10%;
+}
+.sf-leaf-l { left: -16px; transform: rotate(-30deg); }
+.sf-leaf-r { right: -16px; transform: rotate(30deg) scaleX(-1); }
+
+.sf-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sf-center {
+  border-radius: 50%;
+  background: radial-gradient(circle, #5a3010 40%, #3d1f08 100%);
+  border: 2px solid #2a1005;
+  z-index: 2;
+  position: relative;
+}
+
+.sf-petals {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.sf-petal {
+  position: absolute;
+  background: linear-gradient(180deg, #FFE044, #FFA800);
+  border-radius: 50% 50% 30% 30%;
+  transform-origin: bottom center;
+}
+
+@keyframes sway {
+  0%,100%{transform: rotate(var(--base-rot, -3deg));}
+  50%{transform: rotate(var(--sway-rot, 3deg));}
+}
+
+@keyframes cloudDrift {
+  from{transform:translateX(-200px);}
+  to{transform:translateX(calc(100vw + 200px));}
+}
+
+/* Butterfly */
+.butterfly {
+  position: absolute;
+  font-size: 18px;
+  animation: flutter linear infinite;
+  pointer-events: none;
+}
+
+@keyframes flutter {
+  0%{transform:translate(0,0) rotate(0deg);}
+  25%{transform:translate(30px,-20px) rotate(10deg);}
+  50%{transform:translate(60px,0px) rotate(-5deg);}
+  75%{transform:translate(30px,15px) rotate(8deg);}
+  100%{transform:translate(0,0) rotate(0deg);}
+}
+
+/* ===== SCANLINES ===== */
 .scanlines {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
   pointer-events: none;
-  z-index: 1000;
+  z-index: 999;
 }
 
+/* ===== ARCADE MACHINE ===== */
 .arcade-machine {
   max-width: 900px;
   margin: 0 auto;
   padding: 16px;
+  position: relative;
+  z-index: 10;
 }
 
 .arcade-header {
@@ -54,7 +190,7 @@ body {
   border: 4px solid var(--sun);
   border-radius: 4px;
   margin-bottom: 16px;
-  background: linear-gradient(180deg, #1a0a2e 0%, #0d0d1a 100%);
+  background: linear-gradient(180deg, rgba(26,10,46,0.82) 0%, rgba(13,13,26,0.82) 100%);
   box-shadow: var(--glow-gold), inset 0 0 30px rgba(255,215,0,0.05);
   position: relative;
   overflow: hidden;
@@ -105,25 +241,26 @@ body {
   font-size: 22px;
 }
 
-.sf { animation: sway 2s ease-in-out infinite; display: inline-block; }
+.sf { animation: sway2 2s ease-in-out infinite; display: inline-block; }
 .sf:nth-child(2) { animation-delay: 0.3s; }
 .sf:nth-child(3) { animation-delay: 0.6s; }
 .sf:nth-child(4) { animation-delay: 0.9s; }
 .sf:nth-child(5) { animation-delay: 1.2s; }
 
-@keyframes sway {
+@keyframes sway2 {
   0%, 100% { transform: rotate(-5deg); }
   50% { transform: rotate(5deg); }
 }
 
 .screen {
-  background: var(--screen-bg);
+  background: rgba(0,17,0,0.75);
   border: 4px solid var(--sun);
   border-radius: 4px;
   padding: 24px;
   min-height: 520px;
   box-shadow: var(--glow-gold), inset 0 0 40px rgba(0,17,0,0.5);
   position: relative;
+  backdrop-filter: blur(2px);
 }
 
 .round-indicator {
@@ -237,6 +374,64 @@ body {
 
 .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
 
+/* ===== WRONG ANSWER OVERLAY ===== */
+#wrong-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 9998;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+#wrong-overlay.show { display: flex; }
+
+.wrong-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  color: var(--pixel-red);
+  text-shadow: var(--glow-red);
+  animation: wrongShake 0.4s ease-in-out 3;
+  margin-bottom: 16px;
+}
+
+.wrong-urdu {
+  font-family: 'VT323', monospace;
+  font-size: 38px;
+  color: #ff6666;
+  margin-bottom: 16px;
+  line-height: 1.3;
+  animation: wrongPulse 0.6s ease-in-out infinite alternate;
+}
+
+.correct-reveal {
+  font-family: 'VT323', monospace;
+  font-size: 22px;
+  color: var(--leaf-light);
+  border: 2px solid var(--leaf-light);
+  padding: 10px 20px;
+  background: rgba(0,255,65,0.08);
+  box-shadow: var(--glow-green);
+  max-width: 500px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+@keyframes wrongShake {
+  0%,100%{transform:translateX(0);}
+  25%{transform:translateX(-8px);}
+  75%{transform:translateX(8px);}
+}
+
+@keyframes wrongPulse {
+  from{text-shadow:0 0 10px #ff4444;}
+  to{text-shadow:0 0 30px #ff0000, 0 0 60px #ff0000;}
+}
+
+/* ===== FEEDBACK POPUP (correct) ===== */
 .feedback-popup {
   position: fixed;
   top: 50%;
@@ -255,7 +450,6 @@ body {
 
 .feedback-popup.show { transform: translate(-50%, -50%) scale(1); }
 .feedback-popup.correct-fb { border-color: var(--leaf-light); box-shadow: var(--glow-green); }
-.feedback-popup.wrong-fb { border-color: var(--pixel-red); box-shadow: var(--glow-red); }
 
 .feedback-emoji { font-size: 44px; margin-bottom: 12px; display: block; }
 .feedback-urdu { font-family: 'VT323', monospace; font-size: 30px; margin-bottom: 8px; }
@@ -279,10 +473,7 @@ body {
   letter-spacing: 2px;
 }
 
-.action-btn:hover {
-  background: rgba(255,215,0,0.2);
-  transform: scale(1.02);
-}
+.action-btn:hover { background: rgba(255,215,0,0.2); transform: scale(1.02); }
 
 .progress-row {
   display: flex;
@@ -318,42 +509,11 @@ body {
   margin-bottom: 16px;
 }
 
-.upload-zone:hover, .upload-zone.drag-over {
-  border-color: var(--sun);
-  background: rgba(255,215,0,0.08);
-  box-shadow: var(--glow-gold);
-}
+.loading-bar { height: 8px; background: rgba(255,255,255,0.1); border: 1px solid var(--sun); margin: 16px 0; overflow: hidden; }
+.loading-fill { height: 100%; background: linear-gradient(90deg, var(--sun-dark), var(--sun), var(--leaf)); animation: loading-anim 2s ease-in-out infinite; width: 70%; }
+@keyframes loading-anim { 0%{transform:translateX(-100%);} 100%{transform:translateX(200%);} }
 
-.upload-icon { font-size: 52px; margin-bottom: 12px; display: block; }
-.upload-text { font-size: 10px; color: var(--sun); margin-bottom: 8px; letter-spacing: 2px; }
-.upload-sub { font-family: 'VT323', monospace; font-size: 18px; color: #666; }
-
-.loading-bar {
-  height: 8px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid var(--sun);
-  margin: 16px 0;
-  overflow: hidden;
-}
-
-.loading-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--sun-dark), var(--sun), var(--leaf));
-  animation: loading-anim 2s ease-in-out infinite;
-  width: 70%;
-}
-
-@keyframes loading-anim {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(200%); }
-}
-
-.memory-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 16px;
-}
+.memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
 
 .mem-card {
   aspect-ratio: 1;
@@ -378,20 +538,9 @@ body {
 .mem-card.shake { animation: shake 0.4s; border-color: var(--pixel-red); color: var(--pixel-red); }
 .mem-card:hover:not(.matched) { border-color: var(--sun); box-shadow: var(--glow-gold); }
 
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
-}
+@keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-5px);} 75%{transform:translateX(5px);} }
 
-.concept-map-area {
-  position: relative;
-  height: 340px;
-  border: 2px solid rgba(255,215,0,0.2);
-  background: rgba(0,0,0,0.3);
-  margin-bottom: 12px;
-  overflow: hidden;
-}
+.concept-map-area { position: relative; height: 340px; border: 2px solid rgba(255,215,0,0.2); background: rgba(0,0,0,0.3); margin-bottom: 12px; overflow: hidden; }
 
 .concept-node {
   position: absolute;
@@ -410,7 +559,6 @@ body {
 
 .concept-node:hover { border-color: var(--sun); box-shadow: var(--glow-gold); }
 .concept-node.selected { border-color: #ff44ff; box-shadow: 0 0 10px #ff44ff; background: rgba(255,68,255,0.15); }
-.concept-node.linked { border-color: var(--leaf-light); background: rgba(0,255,65,0.1); }
 
 .connect-btn-wrap { display: flex; gap: 8px; margin-bottom: 10px; }
 
@@ -425,7 +573,6 @@ body {
   cursor: pointer;
   transition: all 0.15s;
 }
-
 .small-btn:hover { background: rgba(255,215,0,0.12); border-color: var(--sun); }
 .small-btn.active { background: rgba(255,215,0,0.2); border-color: var(--sun); box-shadow: var(--glow-gold); }
 
@@ -445,7 +592,6 @@ body {
   line-height: 1.5;
   margin-bottom: 10px;
 }
-
 .teach-textarea:focus { outline: none; border-color: var(--sun); box-shadow: var(--glow-gold); }
 
 .ai-response-box {
@@ -470,33 +616,12 @@ body {
   animation: pulse-score 1.5s ease-in-out infinite;
 }
 
-@keyframes pulse-score {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
+@keyframes pulse-score { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
 
-.grade-badge {
-  display: inline-block;
-  padding: 10px 24px;
-  border: 3px solid var(--sun);
-  font-size: 20px;
-  color: var(--sun);
-  text-shadow: var(--glow-gold);
-  box-shadow: var(--glow-gold);
-  margin-bottom: 16px;
-}
+.grade-badge { display: inline-block; padding: 10px 24px; border: 3px solid var(--sun); font-size: 20px; color: var(--sun); text-shadow: var(--glow-gold); box-shadow: var(--glow-gold); margin-bottom: 16px; }
 
 .round-breakdown { text-align: left; margin: 16px 0; }
-
-.round-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border-bottom: 1px solid rgba(255,215,0,0.15);
-  font-size: 8px;
-  color: #aaa;
-}
-
+.round-row { display: flex; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid rgba(255,215,0,0.15); font-size: 8px; color: #aaa; }
 .round-row-score { color: var(--sun); }
 
 .remarks-box {
@@ -511,104 +636,73 @@ body {
   text-align: left;
 }
 
-.sunflower-field { display: flex; justify-content: center; gap: 6px; margin: 12px 0; font-size: 24px; }
+.sunflower-field-emoji { display: flex; justify-content: center; gap: 6px; margin: 12px 0; font-size: 24px; }
 
-.coin-insert {
-  text-align: center;
-  font-size: 9px;
-  color: var(--sun-dark);
-  animation: blink 1s step-end infinite;
-  margin-top: 10px;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
+.coin-insert { text-align: center; font-size: 9px; color: var(--sun-dark); animation: blink 1s step-end infinite; margin-top: 10px; }
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
 
 .intro-screen { text-align: center; padding: 20px 10px; }
 .intro-logo { font-size: 15px; color: var(--sun); text-shadow: var(--glow-gold); margin-bottom: 20px; line-height: 2.2; }
 .intro-rounds { text-align: left; max-width: 420px; margin: 0 auto 20px; }
 
-.intro-round-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(255,215,0,0.15);
-  font-size: 8px;
-  color: #aaa;
-}
+.intro-round-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,215,0,0.15); font-size: 8px; color: #aaa; }
+.round-num { width: 26px; height: 26px; background: rgba(255,215,0,0.15); border: 2px solid var(--sun); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--sun); flex-shrink: 0; }
 
-.round-num {
-  width: 26px; height: 26px;
-  background: rgba(255,215,0,0.15);
-  border: 2px solid var(--sun);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  color: var(--sun);
-  flex-shrink: 0;
-}
+.status-msg { font-family: 'VT323', monospace; font-size: 18px; color: #888; text-align: center; margin: 8px 0; }
 
-.status-msg {
-  font-family: 'VT323', monospace;
-  font-size: 18px;
-  color: #888;
-  text-align: center;
-  margin: 8px 0;
-}
-
-.spin-btn {
-  display: block;
-  margin: 0 auto 16px;
-  padding: 14px 28px;
-  background: rgba(255,215,0,0.1);
-  border: 3px solid var(--sun);
-  color: var(--sun);
-  font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
-  cursor: pointer;
-  text-shadow: var(--glow-gold);
-  box-shadow: var(--glow-gold);
-  transition: all 0.15s;
-}
-
+.spin-btn { display: block; margin: 0 auto 16px; padding: 14px 28px; background: rgba(255,215,0,0.1); border: 3px solid var(--sun); color: var(--sun); font-family: 'Press Start 2P', monospace; font-size: 9px; cursor: pointer; text-shadow: var(--glow-gold); box-shadow: var(--glow-gold); transition: all 0.15s; }
 .spin-btn:hover:not(:disabled) { background: rgba(255,215,0,0.2); }
 .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.connection-list {
-  max-height: 70px;
-  overflow-y: auto;
-  margin-bottom: 10px;
-  font-family: 'VT323', monospace;
-  font-size: 15px;
-  color: var(--leaf-light);
-}
-
+.connection-list { max-height: 70px; overflow-y: auto; margin-bottom: 10px; font-family: 'VT323', monospace; font-size: 15px; color: var(--leaf-light); }
 .connection-item { padding: 3px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
-.pixel-divider {
-  height: 2px;
-  background: repeating-linear-gradient(90deg, var(--sun) 0px, var(--sun) 8px, transparent 8px, transparent 16px);
-  margin: 14px 0;
-  opacity: 0.4;
-}
+.pixel-divider { height: 2px; background: repeating-linear-gradient(90deg, var(--sun) 0px, var(--sun) 8px, transparent 8px, transparent 16px); margin: 14px 0; opacity: 0.4; }
 
-.teach-grade {
-  font-size: 9px;
-  padding: 8px 12px;
-  margin: 8px 0;
-  border: 2px solid;
-}
-
+.teach-grade { font-size: 9px; padding: 8px 12px; margin: 8px 0; border: 2px solid; }
 .grade-a { border-color: var(--leaf-light); color: var(--leaf-light); background: rgba(0,255,65,0.08); }
 .grade-b { border-color: var(--sun); color: var(--sun); background: rgba(255,215,0,0.08); }
 .grade-c { border-color: var(--pixel-red); color: var(--pixel-red); background: rgba(255,68,68,0.08); }
+
+/* ===== CHAPTER SELECT ===== */
+.chapter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 20px 0;
+}
+
+.chapter-card {
+  border: 3px solid rgba(255,215,0,0.4);
+  padding: 18px 14px;
+  background: rgba(255,215,0,0.04);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.chapter-card:hover {
+  border-color: var(--sun);
+  background: rgba(255,215,0,0.12);
+  box-shadow: var(--glow-gold);
+  transform: scale(1.02);
+}
+
+.chapter-num { font-size: 9px; color: var(--sun-dark); margin-bottom: 6px; }
+.chapter-title { font-size: 8px; color: var(--sun); line-height: 1.7; margin-bottom: 6px; }
+.chapter-desc { font-family: 'VT323', monospace; font-size: 16px; color: #888; line-height: 1.4; }
+
+@media(max-width:500px){ .chapter-grid{grid-template-columns:1fr;} }
+
+.round-intro-screen { text-align: center; padding: 20px 10px; }
+.round-intro-icon { font-size: 60px; margin-bottom: 16px; animation: bounce 0.8s ease-in-out infinite alternate; }
+@keyframes bounce { from{transform:translateY(0);} to{transform:translateY(-10px);} }
 </style>
 </head>
 <body>
+
+<!-- Sunflower Field Background -->
+<div id="sunflower-field"></div>
 <div class="scanlines"></div>
 
 <div class="arcade-machine">
@@ -624,21 +718,253 @@ body {
   </div>
 </div>
 
-<div class="feedback-popup" id="feedback-popup">
-  <span class="feedback-emoji" id="fb-emoji"></span>
-  <div class="feedback-urdu" id="fb-urdu"></div>
+<!-- Wrong answer overlay -->
+<div id="wrong-overlay">
+  <div class="wrong-title">✗ WRONG ANSWER ✗</div>
+  <div class="wrong-urdu" id="wrong-urdu-text">BAAP KO SIKANA PADEGA</div>
+  <div style="margin-bottom:16px;font-size:8px;color:#ff9999">correct answer was:</div>
+  <div class="correct-reveal" id="correct-reveal-text"></div>
+</div>
+
+<!-- Correct feedback popup -->
+<div class="feedback-popup correct-fb" id="feedback-popup">
+  <span class="feedback-emoji">🌻</span>
+  <div class="feedback-urdu" style="color:#32CD32">ADE WAH!</div>
   <div class="feedback-pts" id="fb-pts"></div>
 </div>
 
-<input type="file" id="file-input" accept=".pdf,.ppt,.pptx,.txt" style="display:none">
-
 <script>
-const CLAUDE_MODEL = 'anthropic/claude-sonnet-4-5';
-const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+// =============================================
+// SUNFLOWER FIELD BACKGROUND
+// =============================================
+(function buildField() {
+  const field = document.getElementById('sunflower-field');
+
+  // Sky sun
+  const skySun = document.createElement('div');
+  skySun.className = 'sky-sun';
+  field.appendChild(skySun);
+
+  // Clouds
+  const clouds = [
+    {w:120,h:30,top:'8%',dur:'25s',delay:'0s'},
+    {w:80,h:22,top:'14%',dur:'35s',delay:'-10s'},
+    {w:160,h:38,top:'5%',dur:'45s',delay:'-20s'},
+    {w:90,h:25,top:'18%',dur:'30s',delay:'-5s'},
+  ];
+  clouds.forEach(c => {
+    const cl = document.createElement('div');
+    cl.className = 'cloud';
+    cl.style.cssText = `width:${c.w}px;height:${c.h}px;top:${c.top};left:-${c.w}px;animation-duration:${c.dur};animation-delay:${c.delay}`;
+    cl.style.transform = `scaleY(0.6)`;
+    field.appendChild(cl);
+  });
+
+  // Butterflies
+  const butterflies = ['🦋','🦋','🐝','🦋'];
+  butterflies.forEach((b,i) => {
+    const el = document.createElement('div');
+    el.className = 'butterfly';
+    el.textContent = b;
+    el.style.cssText = `left:${15+i*20}%;top:${20+i*5}%;animation-duration:${6+i*2}s;animation-delay:${-i*1.5}s`;
+    field.appendChild(el);
+  });
+
+  // Sunflowers
+  const sfData = [
+    {left:'3%', h:120, size:38, delay:0},
+    {left:'9%', h:95, size:30, delay:0.4},
+    {left:'15%',h:140, size:44, delay:0.8},
+    {left:'20%',h:80, size:26, delay:0.2},
+    {left:'25%',h:110, size:36, delay:1.1},
+    {left:'30%',h:130, size:40, delay:0.6},
+    {left:'36%',h:90, size:28, delay:0.9},
+    {left:'42%',h:150, size:46, delay:0.3},
+    {left:'48%',h:100, size:32, delay:1.3},
+    {left:'54%',h:125, size:39, delay:0.5},
+    {left:'60%',h:85, size:28, delay:1.0},
+    {left:'66%',h:145, size:45, delay:0.7},
+    {left:'72%',h:95, size:30, delay:0.2},
+    {left:'78%',h:120, size:38, delay:1.2},
+    {left:'84%',h:105, size:34, delay:0.4},
+    {left:'90%',h:135, size:42, delay:0.8},
+    {left:'96%',h:88, size:27, delay:1.4},
+  ];
+
+  sfData.forEach(s => {
+    const plant = document.createElement('div');
+    plant.className = 'sf-plant';
+    plant.style.cssText = `left:${s.left};animation:sway ${2+Math.random()}s ease-in-out infinite;animation-delay:${s.delay}s;--base-rot:-${3+Math.random()*4}deg;--sway-rot:${3+Math.random()*4}deg`;
+
+    // Head
+    const head = document.createElement('div');
+    head.className = 'sf-head';
+    head.style.cssText = `width:${s.size}px;height:${s.size}px;`;
+
+    // Petals
+    const petalCount = 12;
+    for (let p = 0; p < petalCount; p++) {
+      const petal = document.createElement('div');
+      petal.className = 'sf-petal';
+      const pw = s.size * 0.28, ph = s.size * 0.42;
+      const angle = (360/petalCount)*p;
+      const dist = s.size * 0.32;
+      const rad = angle * Math.PI / 180;
+      const cx = Math.cos(rad-Math.PI/2)*dist + s.size/2 - pw/2;
+      const cy = Math.sin(rad-Math.PI/2)*dist + s.size/2 - ph;
+      petal.style.cssText = `width:${pw}px;height:${ph}px;left:${cx}px;top:${cy}px;transform:rotate(${angle}deg);transform-origin:${pw/2}px ${ph}px`;
+      head.appendChild(petal);
+    }
+
+    // Center
+    const center = document.createElement('div');
+    center.className = 'sf-center';
+    const cs = s.size * 0.42;
+    center.style.cssText = `width:${cs}px;height:${cs}px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)`;
+    head.appendChild(center);
+
+    // Stem
+    const stem = document.createElement('div');
+    stem.className = 'sf-stem';
+    stem.style.cssText = `height:${s.h}px;width:${Math.max(4,s.size*0.1)}px`;
+
+    // Leaf
+    const leafMid = Math.floor(s.h * 0.5);
+    const ll = document.createElement('div');
+    ll.className = 'sf-leaf-l';
+    ll.style.top = `${leafMid}px`;
+    stem.appendChild(ll);
+    const lr = document.createElement('div');
+    lr.className = 'sf-leaf-r';
+    lr.style.top = `${leafMid + 20}px`;
+    stem.appendChild(lr);
+
+    plant.appendChild(head);
+    plant.appendChild(stem);
+    field.appendChild(plant);
+  });
+})();
+
+// =============================================
+// CHAPTER DATA — HARDCODED
+// =============================================
+const CHAPTERS = {
+  5: {
+    name: "Power, Politics & Change",
+    icon: "⚔️",
+    desc: "Chapter 5 — Power types, conflict stages, politics",
+    quiz: [
+      {q:"French and Raven (1959) identified 5 power types. Which power comes from the ability to PUNISH rather than reward?",opts:["Legitimate Power","Expert Power","Referent Power","Coercive Power"],c:3},
+      {q:"A manager resists a restructuring plan to protect their department budget — even though they currently support change. Which cell of the Power/Motivation matrix are they in?",opts:["Cell A – High Power, Low Motivation","Cell B – High Power, High Motivation","Cell C – Low Power, Low Motivation","Cell D – Low Power, High Motivation"],c:0},
+      {q:"According to Cynthia Hardy (1996), 'System Power' refers to what?",opts:["A leader's ability to set KPIs","Ingrained culture, routines and norms that resist change","The formal authority structure in an org chart","The power to offer financial incentives"],c:1},
+      {q:"The curvilinear (inverted-U) conflict model suggests that MODERATE conflict leads to:",opts:["Disengagement and low motivation","Innovation and improved performance","Stress, broken communication and faction-forming","A need for immediate managerial intervention"],c:1},
+      {q:"In the 5-stage conflict process, what happens at the 'Cognition and Personalization' stage?",opts:["Conflict becomes visible through overt actions","People decide their response strategy (compete/collaborate)","Individuals perceive conflict and may feel emotional","The root causes of conflict first appear"],c:2},
+      {q:"Blake & Mouton's conflict resolution model: which style yields to the other party primarily to preserve the relationship?",opts:["Competing","Compromising","Avoiding","Accommodating"],c:3},
+      {q:"Nadler (1988) identified which THREE primary challenges during organizational change?",opts:["Resistance, poor communication, lack of resources","Resistance, loss of control, shifts in power dynamics","Conflict, politics, insufficient leadership","Low motivation, unclear goals, poor structure"],c:1},
+    ],
+    memPairs: [
+      {term:"Coercive Power",def:"Ability to impose penalties or discipline"},
+      {term:"Referent Power",def:"Influence from personal traits that inspire admiration"},
+      {term:"Curvilinear Model",def:"Inverted U — moderate conflict boosts performance"},
+      {term:"System Power",def:"Ingrained culture & norms embedded in how things are done"},
+      {term:"Cell B (Power Matrix)",def:"High power + high motivation = greatest blocker of change"},
+      {term:"Compromising",def:"Both sides give something up to reach agreement"},
+      {term:"Stage 3 – Intentions",def:"People decide to confront, avoid, or collaborate"},
+    ],
+    concepts: ["Coercive Power","Referent Power","Conflict Stages","System Power","Politics","Power Matrix","Compromise","Resistance"],
+    connections: [[0,1],[2,5],[3,6],[4,1],[0,6]],
+    wheel: ["Legitimate Power","Coercive Power","Five Conflict Stages","Power Matrix","Conflict Resolution","System Power"],
+    teach: ["The five types of power according to French and Raven (1959) and how each influences organizational change","The curvilinear relationship between conflict and performance, and its three key stages"],
+  },
+  6: {
+    name: "Leadership & Leading Change",
+    icon: "👑",
+    desc: "Chapter 6 — Leadership styles, situational theory, transformational",
+    quiz: [
+      {q:"In Blake & Mouton's Leadership Grid, which style scores (9,9) and is considered MOST effective during change?",opts:["Accommodating Leadership","Compromising Leadership","Team Management","Directive Leadership"],c:2},
+      {q:"Hersey & Blanchard's 'Delegating' style is appropriate when followers are:",opts:["New and unsure of responsibilities","Capable and motivated — need minimal oversight","Experienced but lacking confidence","Knowledgeable but needing strong direction"],c:1},
+      {q:"According to Bass (1990), which transformational leadership trait involves CHALLENGING the status quo and encouraging critical thinking?",opts:["Charisma (Idealized Influence)","Individualized Consideration","Intellectual Stimulation","Referent Influence"],c:2},
+      {q:"Beddoes-Jones (2012) defines authentic leadership on THREE pillars. Which is NOT one of them?",opts:["Self-Awareness","Self-Regulation","Ethics","Charisma"],c:3},
+      {q:"The 'Cynicism Spiral' (Stanley et al., 2005) describes a situation where management responds to employee cynicism by:",opts:["Involving employees earlier and more often","Increasing transparency and honesty","Becoming more authoritarian and secretive","Acknowledging past mistakes openly"],c:2},
+      {q:"Which leadership style is described as 'High Task, High Relationship' in Hersey & Blanchard's model?",opts:["Directing (Telling)","Coaching (Selling)","Supporting (Participating)","Delegating"],c:1},
+      {q:"'Emergent Change' (bottom-up) differs from Planned Change because it:",opts:["Is designed and directed by senior leadership","Has clear goals and timelines set in advance","Evolves naturally from employee actions or small innovations","Requires formal approval before implementation"],c:2},
+    ],
+    memPairs: [
+      {term:"Indifferent Leadership (1,1)",def:"Minimal effort — avoids responsibility and decisions"},
+      {term:"Coaching / Selling",def:"High Task + High Relationship — guides and encourages"},
+      {term:"Intellectual Stimulation",def:"Transformational trait: challenges assumptions & invites new ideas"},
+      {term:"Cynicism Spiral",def:"Distrust cycle where management becomes secretive, trust breaks down"},
+      {term:"Internal Locus of Control",def:"Belief that effort and actions directly determine outcomes"},
+      {term:"Planned Change",def:"Top-down structured change with clear goals and timelines"},
+      {term:"Authentic Leadership",def:"Leading with integrity through self-awareness, regulation and ethics"},
+    ],
+    concepts: ["Team Management (9,9)","Situational Leadership","Transformational Leadership","Cynicism Spiral","Planned Change","Emergent Change","Self-Awareness","Charisma"],
+    connections: [[0,2],[1,0],[3,4],[5,6],[2,7]],
+    wheel: ["Blake & Mouton Grid","Hersey & Blanchard","Transformational Leadership","Cynicism Spiral","Authentic Leadership","Planned vs Emergent"],
+    teach: ["Hersey and Blanchard's Situational Leadership Theory — the four styles and when each is appropriate","The Cynicism Spiral: how it develops, why it damages change efforts, and how leaders can break the cycle"],
+  },
+  7: {
+    name: "Hard Systems Model of Change",
+    icon: "⚙️",
+    desc: "Chapter 7 — HSMC, objectives trees, change architecture",
+    quiz: [
+      {q:"The Hard Systems Model of Change (HSMC) is MOST effective in which type of situation?",opts:["Soft complexity — messy, cultural, political issues","Coercive environments with strong stakeholder disagreement","Hard complexity — clear, structured, measurable problems","Emergent situations without defined objectives"],c:2},
+      {q:"In HSMC's 8 stages, Stage 6 ('Evaluate Options Against Measures') involves:",opts:["Brainstorming all possible solution ideas","Setting performance criteria to measure success","Choosing the best solution using pre-defined performance criteria","Running a pilot study in one region"],c:2},
+      {q:"'Parallel Running' as an implementation strategy means:",opts:["All departments switch to the new system simultaneously","The old and new systems run together until confidence is built","A small-scale pilot is tested before full rollout","Implementation is phased over 12+ months gradually"],c:1},
+      {q:"Which relationship type in HSMC involves strong disagreement where decisions are ENFORCED by authority?",opts:["Unitary","Pluralist","Coercive","Collaborative"],c:2},
+      {q:"Carnall's Strategic Change Model emphasizes that change architecture requires 'convergent design'. This means:",opts:["All change is managed by a central team only","Different change initiatives must support and reinforce each other","Change is implemented rapidly using a big-bang approach","Each department designs its own independent change plan"],c:1},
+      {q:"According to Miles (2010), which of the following is a CAUSE of programme failure?",opts:["Excessive staff engagement","Too much flexibility in planning","Leadership avoiding harsh realities","Clear communication of benefits"],c:2},
+      {q:"An objectives tree is described as 'hierarchical' because:",opts:["It is always approved by the most senior leader first","Higher-level strategic goals are broken into smaller sub-objectives","Objectives are ranked by difficulty from easiest to hardest","It follows a chronological timeline of the change process"],c:1},
+    ],
+    memPairs: [
+      {term:"HSMC Stage 1",def:"Situation Summary — describe the current system and identify issues"},
+      {term:"Big Bang Implementation",def:"Switch everything at once — fast but high risk"},
+      {term:"Pilot Study",def:"Test the change on a small scale first before full rollout"},
+      {term:"Objectives Tree",def:"Hierarchical structure breaking strategic goals into sub-objectives"},
+      {term:"Unitary Relationship",def:"Everyone shares goals and works together without major conflict"},
+      {term:"Economy of Effort",def:"Focus resources only on what is truly critical to success"},
+      {term:"Consolidation (Stage 8)",def:"Provide training and track performance for long-term success"},
+    ],
+    concepts: ["HSMC Stage 1–3","HSMC Stage 4–6","Big Bang","Pilot Study","Parallel Running","Objectives Tree","Carnall Model","Change Architecture"],
+    connections: [[0,1],[1,2],[2,3],[4,5],[6,7]],
+    wheel: ["8 Stages of HSMC","Objectives Tree","Implementation Strategies","Change Architecture","Carnall's Model","Success vs Failure Factors"],
+    teach: ["The three implementation strategies in HSMC (Pilot Study, Parallel Running, Big Bang) and the trade-offs between them","Carnall's five key performance characteristics and the six conditions for successful strategic change"],
+  },
+  8: {
+    name: "Soft Systems Models for Change",
+    icon: "🧠",
+    desc: "Chapter 8 — OD, action research, Lewin, Pugh matrix",
+    quiz: [
+      {q:"Ackoff's 'Dissolving' approach to problems (Design Approach) means:",opts:["Using past experience and common sense to resolve issues","Applying scientific analytical models to solve problems","Redesigning the system/environment so the problem disappears","Gathering qualitative data to understand the root cause"],c:2},
+      {q:"'Double-loop learning' (as opposed to single-loop) involves:",opts:["Improving existing processes without questioning their purpose","Questioning underlying assumptions and doing fundamentally better things","Repeating a successful process more efficiently","Training staff on new software tools"],c:1},
+      {q:"In the OD action research model, what happens AFTER 'joint agreement of the problem'?",opts:["Data gathering and preliminary diagnosis","Feedback to key people","Joint action planning","Reinforcement and continuous assessment"],c:2},
+      {q:"The Pugh OD Matrix links OD interventions across THREE levels. Which level includes structural changes like surveys and policy reform?",opts:["Individual level","Group level","Organizational level","Leadership level"],c:2},
+      {q:"Lewin's change model involves three stages. 'Refreezing' refers to:",opts:["Announcing the need for change and disrupting the status quo","Implementing and piloting new behaviours and systems","Embedding new behaviours permanently through rewards and culture","Collecting data to diagnose current problems"],c:2},
+      {q:"'Organizational Mirroring' as an OD intervention involves:",opts:["Each department mapping its own workflows independently","Departments giving each other structured feedback on collaboration","Senior managers shadowing frontline staff","Using external consultants to mirror best practice"],c:1},
+      {q:"According to OD philosophy, which of these is NOT a core principle?",opts:["Long-term, participative, and humanistic approach","Top management support","Focus on rapid top-down implementation without staff input","Total system change and learning"],c:2},
+    ],
+    memPairs: [
+      {term:"Single-loop Learning",def:"Adaptive — doing existing things better without questioning them"},
+      {term:"Double-loop Learning",def:"Generative — questioning assumptions to do fundamentally better things"},
+      {term:"Dissolving (Ackoff)",def:"Redesign the system so the problem ceases to exist"},
+      {term:"Unfreezing (Lewin)",def:"Disrupting the status quo to create readiness for change"},
+      {term:"Pugh OD Matrix",def:"Links OD interventions across individual, group, and org levels"},
+      {term:"Action Research Model",def:"Collaborative diagnosis, action, and evaluation cycle"},
+      {term:"Responsibility Chart",def:"Maps who is Responsible, Consulted, Approves, and Informed"},
+    ],
+    concepts: ["Single-loop Learning","Double-loop Learning","OD Philosophy","Lewin Model","Pugh Matrix","Action Research","Dissolving","Refreezing"],
+    connections: [[0,1],[2,6],[3,7],[4,5],[1,5]],
+    wheel: ["OD Philosophy & Principles","Ackoff's 3 Approaches","Lewin's 3-Stage Model","Action Research Steps","Pugh OD Matrix","Double-loop Learning"],
+    teach: ["The OD action research model — its steps and how it differs from top-down planned change","Lewin's Unfreeze-Move-Refreeze model applied to a real organizational change scenario"],
+  }
+};
+
+const ROUND_NAMES = ['QUIZ BATTLE','MEMORY MATCH','CONCEPT MAP','TRIVIA WHEEL','TEACH THE AI'];
+const ROUND_ICONS = ['❓','🃏','🗺️','🎯','🤖'];
 
 const state = {
   phase: 'intro',
-  apiKey: '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',
+  chapter: null,
   score: 0,
   roundScores: [0,0,0,0,0],
   combo: 0,
@@ -646,8 +972,6 @@ const state = {
   lives: 3,
   currentRound: 0,
   currentQ: 0,
-  content: '',
-  questions: {r1:[],r2:[],r3:[],r4:[],r5:[]},
   memCards: [],
   memFlipped: [],
   memMatched: [],
@@ -657,24 +981,51 @@ const state = {
   connectFrom: null,
   wheelAngle: 0,
   wheelSpinning: false,
-  wheelTopics: [],
   currentWheelTopic: '',
   teachQ: 0,
-  aiResponses: [],
+  teachAnswers: ['',''],
+  teachGrades: [null, null],
   loading: false,
-  loadingMsg: ''
 };
 
-const ROUND_NAMES = ['QUIZ BATTLE','MEMORY MATCH','CONCEPT MAP','TRIVIA WHEEL','TEACH THE AI'];
-const ROUND_ICONS = ['❓','🃏','🗺️','🎯','🤖'];
+// =============================================
+// WRONG ANSWER OVERLAY
+// =============================================
+const BAAP_MSGS = [
+  "BAAP KO SIKANA PADEGA 😤",
+  "YEH KYA THA BHAI?! 😭",
+  "DIL PE PATTHAR RAKH KE PADHO 📚",
+  "YAAR SERIOUSLY?! 🤦",
+  "ABBU SE REVISION KARWAO 😩",
+  "GALAT! BILKUL GALAT! ❌",
+];
 
+let wrongTimer = null;
+function showWrong(correctText) {
+  const ov = document.getElementById('wrong-overlay');
+  document.getElementById('wrong-urdu-text').textContent = BAAP_MSGS[Math.floor(Math.random()*BAAP_MSGS.length)];
+  document.getElementById('correct-reveal-text').textContent = '✓ ' + correctText;
+  ov.classList.add('show');
+  if (wrongTimer) clearTimeout(wrongTimer);
+  wrongTimer = setTimeout(() => { ov.classList.remove('show'); }, 3200);
+}
+
+function showCorrect(pts) {
+  const popup = document.getElementById('feedback-popup');
+  popup.classList.remove('show');
+  document.getElementById('fb-pts').textContent = `+${pts} POINTS!`;
+  popup.classList.add('show');
+  setTimeout(() => popup.classList.remove('show'), 1400);
+}
+
+// =============================================
+// RENDER
+// =============================================
 function render() {
   const app = document.getElementById('app');
   if (!app) return;
-  if (state.phase === 'apikey') app.innerHTML = renderApiKey();
-  else if (state.phase === 'intro') app.innerHTML = renderIntro();
-  else if (state.phase === 'upload') app.innerHTML = renderUpload();
-  else if (state.phase === 'loading') app.innerHTML = renderLoading();
+  if (state.phase === 'intro') app.innerHTML = renderIntro();
+  else if (state.phase === 'chapter-select') app.innerHTML = renderChapterSelect();
   else if (state.phase === 'round-intro') app.innerHTML = renderRoundIntro();
   else if (state.phase === 'r1') app.innerHTML = renderQuiz();
   else if (state.phase === 'r2') app.innerHTML = renderMemory();
@@ -690,465 +1041,203 @@ function renderRoundPips() {
 }
 
 function renderScoreBar() {
-  const hearts = '🌻'.repeat(state.lives) + '🍂'.repeat(3-state.lives);
-  return `<div class="score-bar">
-    <span class="score-val">★ ${state.score}</span>
-    <span class="combo-val">COMBO x${state.combo}</span>
-    <span>${hearts}</span>
-    <span class="round-label">RD ${state.currentRound+1}/5</span>
-  </div>`;
-}
-
-function renderApiKey() {
-  return `<div class="intro-screen">
-    <div class="sunflower-field">🌻🌻🌻🌻🌻🌻🌻</div>
-    <div class="section-title" style="margin-bottom:8px">API KEY REQUIRED</div>
-    <div style="font-family:'VT323',monospace;font-size:17px;color:#888;margin-bottom:20px;line-height:1.6">
-      This app uses OpenRouter (free).<br>Get your key at <span style="color:var(--sun)">openrouter.ai/keys</span><br>
-      Your key stays in your browser only.
-    </div>
-    <input id="api-key-input" type="password" placeholder="sk-or-v1-..." value="${state.apiKey}"
-      style="width:100%;padding:12px;background:rgba(0,255,65,0.05);border:2px solid rgba(0,255,65,0.4);
-      color:var(--pixel-green);font-family:'VT323',monospace;font-size:18px;margin-bottom:12px;outline:none">
-    <div id="key-error" style="color:var(--pixel-red);font-size:8px;min-height:16px;margin-bottom:8px"></div>
-    <button class="action-btn" onclick="saveApiKey()">▶ START GAME</button>
-    <div style="font-size:7px;color:#444;margin-top:14px">key saved locally — won't be shared</div>
-  </div>`;
-}
-
-function saveApiKey() {
-  const key = document.getElementById('api-key-input').value.trim();
-  if (!key.startsWith('sk-or-')) {
-    document.getElementById('key-error').textContent = 'must be an OpenRouter key (starts with sk-or-)';
-    return;
-  }
-  state.apiKey = key;
-  localStorage.setItem('or_api_key', key);
-  state.phase = 'intro';
-  render();
+  const hearts = '🌻'.repeat(state.lives) + '🍂'.repeat(Math.max(0,3-state.lives));
+  return `<div class="score-bar"><span class="score-val">★ ${state.score}</span><span class="combo-val">COMBO x${state.combo}</span><span>${hearts}</span><span class="round-label">RD ${state.currentRound+1}/5</span></div>`;
 }
 
 function renderIntro() {
   return `<div class="intro-screen">
-    <div class="sunflower-field">🌻🌻🌻🌻🌻🌻🌻</div>
-    <div class="intro-logo">STUDY ARCADE<br>SUNFLOWER FIELD</div>
+    <div class="sunflower-field-emoji">🌻🌻🌻🌻🌻🌻🌻</div>
+    <div class="intro-logo">STUDY ARCADE<br>SYS380 EDITION</div>
     <div class="intro-rounds">
-      ${[['QUIZ BATTLE','7 questions — pick right answer'],['MEMORY MATCH','7 pairs — flip and match'],['CONCEPT MAP','drag & connect ideas'],['TRIVIA WHEEL','spin for topic — quick fire'],['TEACH THE AI','explain it back — get graded']].map((r,i)=>`
+      ${[['QUIZ BATTLE','7 hard questions — pick the right answer'],['MEMORY MATCH','7 pairs — flip and match'],['CONCEPT MAP','drag & connect ideas'],['TRIVIA WHEEL','spin for topic — quick fire'],['TEACH THE AI','explain it back — get graded']].map((r,i)=>`
       <div class="intro-round-item">
         <div class="round-num">${i+1}</div>
         <div><div style="color:var(--sun);margin-bottom:3px;font-size:9px">${r[0]}</div>${r[1]}</div>
       </div>`).join('')}
     </div>
-    <button class="action-btn" onclick="startGame()">▶ INSERT COIN</button>
+    <button class="action-btn" onclick="state.phase='chapter-select';render()">▶ INSERT COIN</button>
     <div class="coin-insert">PRESS START</div>
   </div>`;
 }
 
-function renderUpload() {
-  return `<div>
-    <div class="section-title">📂 LOAD YOUR NOTES</div>
-    <div class="section-sub">upload ppt, pdf, or txt file</div>
-    <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
-      <span class="upload-icon">🌻</span>
-      <div class="upload-text">DROP FILE HERE</div>
-      <div class="upload-sub">PPT / PPTX / PDF / TXT supported</div>
+function renderChapterSelect() {
+  const chs = [5,6,7,8];
+  return `<div style="text-align:center;padding:10px 0">
+    <div class="section-title">📚 SELECT CHAPTER</div>
+    <div class="section-sub">choose your battle — each chapter is a full 5-round game</div>
+    <div class="chapter-grid">
+      ${chs.map(n => {
+        const ch = CHAPTERS[n];
+        return `<div class="chapter-card" onclick="selectChapter(${n})">
+          <div class="chapter-num">CHAPTER ${n}</div>
+          <div class="chapter-title">${ch.icon} ${ch.name}</div>
+          <div class="chapter-desc">${ch.desc}</div>
+        </div>`;
+      }).join('')}
     </div>
-    <div class="status-msg" id="upload-status">waiting for file...</div>
-    <div class="pixel-divider"></div>
-    <div style="text-align:center;font-size:8px;color:#555;margin:8px 0">— OR DEMO —</div>
-    <button class="action-btn" onclick="useDemoContent()" style="background:rgba(0,255,65,0.05);border-color:rgba(0,255,65,0.4);color:var(--pixel-green);box-shadow:var(--glow-green)">⚡ USE DEMO (NETWORKING)</button>
   </div>`;
 }
 
-function renderLoading() {
-  return `<div style="text-align:center;padding:50px 20px">
-    <div style="font-size:44px;margin-bottom:20px">🌻</div>
-    <div class="section-title">GENERATING GAME...</div>
-    <div class="loading-bar"><div class="loading-fill"></div></div>
-    <div class="status-msg">${state.loadingMsg}</div>
-    <div style="font-size:8px;color:#444;margin-top:24px">claude is reading your notes and building all 5 rounds...</div>
-  </div>`;
+function selectChapter(n) {
+  state.chapter = n;
+  state.score = 0;
+  state.roundScores = [0,0,0,0,0];
+  state.combo = 0;
+  state.maxCombo = 0;
+  state.lives = 3;
+  state.currentRound = 0;
+  state.currentQ = 0;
+  state.teachQ = 0;
+  state.teachAnswers = ['',''];
+  state.teachGrades = [null,null];
+  // Build memory cards
+  buildMemoryCards(CHAPTERS[n].memPairs);
+  // Build concept nodes
+  buildConceptNodes(CHAPTERS[n].concepts, CHAPTERS[n].connections);
+  state.phase = 'round-intro';
+  render();
 }
 
 function renderRoundIntro() {
   const r = state.currentRound;
   const descs = [
-    '7 questions. pick the right answer. earn combo bonus!',
-    '7 pairs hidden. flip and match them all!',
-    'drag nodes. connect related concepts. ai checks your map.',
-    'spin the wheel. get a topic. answer fast!',
-    'explain the concept back to the ai. get graded!'
+    '7 hard questions from your chapter. no hints. just you vs the material.',
+    '7 term/definition pairs. flip and match them all!',
+    'drag nodes. draw connections. show you understand the big picture.',
+    'spin the wheel. land on a topic. answer fast!',
+    'explain the concept back in your own words. get graded by the machine.'
   ];
-  return `<div style="text-align:center;padding:24px 10px">
+  return `<div class="round-intro-screen">
     ${renderRoundPips()}
-    <div style="font-size:52px;margin:20px 0">${ROUND_ICONS[r]}</div>
-    <div style="font-size:9px;color:#666;margin-bottom:8px">ROUND ${r+1} OF 5</div>
-    <div class="section-title" style="font-size:16px">${ROUND_NAMES[r]}</div>
-    <div class="pixel-divider"></div>
-    <div class="status-msg" style="margin:16px 0">${descs[r]}</div>
-    ${renderScoreBar()}
-    <button class="action-btn" onclick="startRound()">READY? LET'S GO! ▶</button>
+    <div class="round-intro-icon">${ROUND_ICONS[r]}</div>
+    <div class="section-title">ROUND ${r+1}: ${ROUND_NAMES[r]}</div>
+    <div style="font-family:'VT323',monospace;font-size:18px;color:#888;margin:10px 0 20px;line-height:1.6">${descs[r]}</div>
+    <div style="font-size:8px;color:rgba(255,215,0,0.5);margin-bottom:16px">Chapter ${state.chapter}: ${CHAPTERS[state.chapter].name}</div>
+    <button class="action-btn" onclick="startRound()">▶ BEGIN ROUND ${r+1}</button>
   </div>`;
 }
 
+function startRound() {
+  const phases = ['r1','r2','r3','r4','r5'];
+  state.phase = phases[state.currentRound];
+  state.currentQ = 0;
+  state.connectMode = false;
+  state.connectFrom = null;
+  state.currentWheelTopic = '';
+  state.wheelSpinning = false;
+  render();
+}
+
+// =============================================
+// ROUND 1 — QUIZ
+// =============================================
 function renderQuiz() {
-  const qs = state.questions.r1;
-  if (!qs.length) return `<div class="status-msg">loading...</div>`;
+  const qs = CHAPTERS[state.chapter].quiz;
   const q = qs[state.currentQ];
-  if (!q) return `<div></div>`;
-  const progress = (state.currentQ/7)*100;
+  if (!q) { advanceRound(); return ''; }
   return `<div>
-    ${renderRoundPips()}
-    ${renderScoreBar()}
+    ${renderRoundPips()}${renderScoreBar()}
     <div class="progress-row">
-      <span>Q${state.currentQ+1}/7</span>
-      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${progress}%"></div></div>
-      <span>QUIZ</span>
+      <span>Q ${state.currentQ+1}/7</span>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${((state.currentQ)/7)*100}%"></div></div>
+      <span>${7-state.currentQ} left</span>
     </div>
-    <div class="question-text">${q.question}</div>
+    <div class="question-text">${q.q}</div>
     <div class="options-grid">
-      ${q.options.map((o,i)=>`<button class="option-btn" id="opt-${i}" onclick="answerQuiz(${i})">${String.fromCharCode(65+i)}. ${o}</button>`).join('')}
+      ${q.opts.map((o,i)=>`<button class="option-btn" id="opt-${i}" onclick="answerQuiz(${i})">${String.fromCharCode(65+i)}. ${o}</button>`).join('')}
     </div>
   </div>`;
 }
 
-function renderMemory() {
-  const cards = state.memCards;
-  return `<div>
-    ${renderRoundPips()}
-    ${renderScoreBar()}
-    <div class="section-title" style="font-size:10px">FLIP & MATCH — ${state.memMatched.length/2}/7 pairs found</div>
-    <div class="memory-grid">
-      ${cards.map((c,i)=>{
-        const isFlipped = state.memFlipped.includes(i);
-        const isMatched = state.memMatched.includes(i);
-        return `<div class="mem-card ${isFlipped?'flipped':''} ${isMatched?'matched':''}"
-          id="mc-${i}" onclick="flipCard(${i})">
-          ${isFlipped||isMatched ? c.text : '?'}
-        </div>`;
-      }).join('')}
-    </div>
-    <div class="status-msg">click cards to reveal. match term with definition!</div>
-  </div>`;
-}
-
-function renderConceptMap() {
-  const nodes = state.conceptNodes;
-  return `<div>
-    ${renderRoundPips()}
-    ${renderScoreBar()}
-    <div class="section-title" style="font-size:10px">CONCEPT MAP — connect related ideas</div>
-    <div style="font-family:'VT323',monospace;font-size:16px;color:#666;text-align:center;margin-bottom:8px">
-      ${state.connectMode ? '🔗 click first node then second node to connect' : 'drag nodes to reposition • enable connect mode to link them'}
-    </div>
-    <div class="connect-btn-wrap">
-      <button class="small-btn ${state.connectMode?'active':''}" onclick="toggleConnectMode()">
-        ${state.connectMode?'🔗 CONNECTING...':'🔗 CONNECT'}
-      </button>
-      <button class="small-btn" onclick="clearConnections()">🗑 CLEAR</button>
-      <button class="small-btn" onclick="checkConceptMap()">✓ SUBMIT MAP</button>
-    </div>
-    <div class="concept-map-area" id="cmap">
-      <svg id="cmap-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none">
-        ${state.conceptConnections.map(c=>{
-          const n1=nodes[c[0]], n2=nodes[c[1]];
-          return `<line x1="${n1.x+55}" y1="${n1.y+16}" x2="${n2.x+55}" y2="${n2.y+16}" stroke="#FFD700" stroke-width="2" stroke-dasharray="5,3" opacity="0.7"/>`;
-        }).join('')}
-      </svg>
-      ${nodes.map((n,i)=>`<div class="concept-node ${state.connectFrom===i?'selected':''} ${state.conceptConnections.some(c=>c.includes(i))?'linked':''}"
-        id="cn-${i}" style="left:${n.x}px;top:${n.y}px"
-        onclick="handleNodeClick(${i})"
-        onmousedown="startDrag(event,${i})">
-        ${n.label}
-      </div>`).join('')}
-    </div>
-    <div class="connection-list">
-      ${state.conceptConnections.map(c=>`<div class="connection-item">⚡ ${nodes[c[0]].label} ↔ ${nodes[c[1]].label}</div>`).join('')}
-    </div>
-    <div id="cmap-feedback"></div>
-  </div>`;
-}
-
-function renderTriviaWheel() {
-  const topics = state.wheelTopics;
-  const n = topics.length || 6;
-  const colors = ['#FFD700','#228B22','#FFA500','#32CD32','#FF8C00','#00CC44'];
-  const r = 110, cx = 140, cy = 140;
-  const slices = topics.map((t,i)=>{
-    const sa = (i/n)*2*Math.PI - Math.PI/2;
-    const ea = ((i+1)/n)*2*Math.PI - Math.PI/2;
-    const x1=cx+r*Math.cos(sa),y1=cy+r*Math.sin(sa);
-    const x2=cx+r*Math.cos(ea),y2=cy+r*Math.sin(ea);
-    const mx=cx+(r*0.62)*Math.cos((sa+ea)/2), my=cy+(r*0.62)*Math.sin((sa+ea)/2);
-    const short = t.length>10 ? t.substring(0,9)+'…' : t;
-    return `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z" fill="${colors[i%colors.length]}" stroke="#0d0d1a" stroke-width="2"/>
-      <text x="${mx}" y="${my}" fill="#0d0d1a" font-size="7" font-family="'Press Start 2P'" text-anchor="middle" dominant-baseline="middle">${short}</text>`;
-  });
-  const q = state.questions.r4[state.currentQ];
-  return `<div>
-    ${renderRoundPips()}
-    ${renderScoreBar()}
-    <div class="section-title" style="font-size:10px">TRIVIA WHEEL — Q${state.currentQ+1}/2</div>
-    <div class="wheel-wrap">
-      <svg width="280" height="280" class="wheel-svg">
-        <g id="wheel-g" transform="rotate(${state.wheelAngle}, ${cx}, ${cy})">${slices.join('')}</g>
-        <polygon points="${cx},${cy-128} ${cx-8},${cy-102} ${cx+8},${cy-102}" fill="#FFD700"/>
-        <circle cx="${cx}" cy="${cy}" r="12" fill="#FFD700"/>
-      </svg>
-    </div>
-    <button class="spin-btn" onclick="spinWheel()" id="spin-btn" ${state.wheelSpinning||state.currentWheelTopic?'disabled':''}>
-      ${state.wheelSpinning?'⚡ SPINNING...':'🎯 SPIN THE WHEEL!'}
-    </button>
-    <div id="trivia-q">
-      ${state.currentWheelTopic && q ? `
-        <div class="status-msg">Topic: <span style="color:var(--sun)">${state.currentWheelTopic}</span></div>
-        <div class="question-text">${q.question}</div>
-        <div class="options-grid">
-          ${q.options.map((o,i)=>`<button class="option-btn" id="topt-${i}" onclick="answerTrivia(${i})">${String.fromCharCode(65+i)}. ${o}</button>`).join('')}
-        </div>` : state.currentWheelTopic ? `<div class="status-msg">generating question for: ${state.currentWheelTopic}...</div>` : `<div class="status-msg">spin the wheel to get a topic!</div>`}
-    </div>
-  </div>`;
-}
-
-function renderTeachAI() {
-  const qs = state.questions.r5;
-  const q = qs[state.teachQ];
-  const resp = state.aiResponses[state.teachQ];
-  return `<div>
-    ${renderRoundPips()}
-    ${renderScoreBar()}
-    <div class="section-title" style="font-size:10px">TEACH THE AI — ${state.teachQ+1}/2</div>
-    ${q ? `
-      <div class="question-text">Explain this concept: <span style="color:var(--sun)">${q}</span></div>
-      ${resp ? `
-        <div class="ai-response-box">${resp.feedback}</div>
-        <div class="teach-grade grade-${resp.grade.toLowerCase()}">${resp.grade} — ${resp.score}/20 pts</div>
-        <button class="action-btn" onclick="nextTeach()">${state.teachQ<1?'NEXT QUESTION ▶':'🏆 SEE FINAL SCORE!'}</button>
-      ` : `
-        <textarea class="teach-textarea" id="teach-input" placeholder="explain in your own words..."></textarea>
-        <button class="action-btn" onclick="submitTeach()">SUBMIT TO AI ▶</button>
-        ${state.loading?`<div class="status-msg">🤖 grading your answer...</div>`:''}
-      `}
-    ` : `<div class="status-msg">loading topic...</div>`}
-  </div>`;
-}
-
-function renderScoreboard() {
-  const max = 7*10 + 7*10 + 30 + 2*15 + 2*20;
-  const pct = Math.round((state.score/max)*100);
-  let grade, remark;
-  if (pct>=90) { grade='S'; remark='LEGENDARY! You studied so hard even the sunflowers bowed. Baap ban gaye aap! 🌻👑'; }
-  else if (pct>=75) { grade='A'; remark='ADE WAH! Solid performance. Keep this energy for the real exam!'; }
-  else if (pct>=60) { grade='B'; remark='Not bad! A few gaps here and there. Review the weak spots once more.'; }
-  else if (pct>=45) { grade='C'; remark='Needs more work. Baap ko sikane padega... yourself. Revise again!'; }
-  else { grade='D'; remark='Yaar... reopen the notes. The sunflowers are deeply disappointed. 🌻😔'; }
-
-  return `<div class="scoreboard">
-    <div class="sunflower-field">🌻🌻🌻🌻🌻🌻🌻</div>
-    <div class="section-title" style="font-size:16px;margin-bottom:4px">GAME COMPLETE!</div>
-    <div class="score-big">${state.score} PTS</div>
-    <div class="grade-badge">GRADE: ${grade}</div>
-    <div style="font-size:9px;color:#666;margin-bottom:16px">${pct}% of max score</div>
-    <div class="pixel-divider"></div>
-    <div class="round-breakdown">
-      ${ROUND_NAMES.map((n,i)=>`<div class="round-row">
-        <span>${ROUND_ICONS[i]} ${n}</span>
-        <span class="round-row-score">${state.roundScores[i]} pts</span>
-      </div>`).join('')}
-      <div class="round-row" style="border-top:2px solid rgba(255,215,0,0.3);margin-top:4px">
-        <span style="color:var(--sun)">MAX COMBO</span>
-        <span class="round-row-score">x${state.maxCombo}</span>
-      </div>
-    </div>
-    <div class="remarks-box">🤖 ${remark}</div>
-    <div class="sunflower-field">🌻🌱🌻🌱🌻🌱🌻</div>
-    <button class="action-btn" onclick="restartGame()">▶ PLAY AGAIN</button>
-  </div>`;
-}
-
-async function callClaude(prompt, system) {
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${state.apiKey}`,
-      'HTTP-Referer': window.location.href,
-      'X-Title': 'Study Arcade'
-    },
-    body: JSON.stringify({
-      model: CLAUDE_MODEL,
-      max_tokens: 1000,
-      messages: [
-        { role: 'system', content: system || 'You are a helpful study game generator.' },
-        { role: 'user', content: prompt }
-      ]
-    })
-  });
-  const data = await res.json();
-  if (data.error) {
-    // Rate limit
-    if (res.status === 429 || (data.error.message && data.error.message.includes('rate'))) {
-      throw new Error('RATE_LIMIT');
-    }
-    // Bad API key
-    if (res.status === 401) {
-      localStorage.removeItem('or_api_key');
-      state.apiKey = '';
-      state.phase = 'apikey';
-      render();
-      throw new Error('Invalid API key — please re-enter it.');
-    }
-    throw new Error(data.error.message || JSON.stringify(data.error));
-  }
-  return data.choices[0].message.content;
-}
-
-function showFeedback(correct, pts) {
-  const popup = document.getElementById('feedback-popup');
-  popup.classList.remove('correct-fb','wrong-fb','show');
-  document.getElementById('fb-emoji').textContent = correct ? '🌻' : '💀';
-  document.getElementById('fb-urdu').textContent = correct ? 'ADE WAH!' : 'BAAP KO SIKANE PADEGA';
-  document.getElementById('fb-urdu').style.color = correct ? '#32CD32' : '#ff4444';
-  document.getElementById('fb-pts').textContent = correct ? `+${pts} POINTS!` : 'NO POINTS';
-  popup.classList.add(correct?'correct-fb':'wrong-fb','show');
-  setTimeout(()=>popup.classList.remove('show'), 1500);
-}
-
-function startGame() { state.phase='upload'; render(); }
-
-function useDemoContent() {
-  state.content = `Chapter: Computer Networking Fundamentals
-A network connects devices to share data and resources. IP addresses uniquely identify devices — IPv4 uses 32 bits (e.g. 192.168.1.1), IPv6 uses 128 bits.
-Routers forward packets between different networks using routing tables. Switches connect devices within the same LAN (local area network).
-DNS (Domain Name System) translates domain names like google.com into IP addresses. DHCP automatically assigns IP addresses to devices.
-TCP/IP is the foundational protocol suite. HTTP runs on port 80, HTTPS on port 443, SSH on port 22.
-Firewalls filter traffic based on rules — blocking unauthorized access. VPNs create encrypted tunnels for secure remote connections.
-The OSI model has 7 layers: Physical, Data Link, Network, Transport, Session, Presentation, Application.
-MAC addresses are hardware identifiers on network cards. Subnetting divides networks into smaller segments for efficiency.
-Bandwidth is maximum data transfer rate. Latency is the delay between sending and receiving. Packets are small chunks of data transmitted across networks.
-NAT (Network Address Translation) allows multiple devices to share one public IP address. ARP resolves IP addresses to MAC addresses on a local network.`;
-  generateAllContent();
-}
-
-function attachEvents() {
-  const dz = document.getElementById('drop-zone');
-  const fi = document.getElementById('file-input');
-  if (dz) {
-    dz.ondragover = e => { e.preventDefault(); dz.classList.add('drag-over'); };
-    dz.ondragleave = () => dz.classList.remove('drag-over');
-    dz.ondrop = e => { e.preventDefault(); dz.classList.remove('drag-over'); handleFile(e.dataTransfer.files[0]); };
-  }
-  if (fi) fi.onchange = e => handleFile(e.target.files[0]);
-}
-
-function handleFile(file) {
-  if (!file) return;
-  const status = document.getElementById('upload-status');
-  const ext = file.name.split('.').pop().toLowerCase();
-  if (status) status.textContent = `reading: ${file.name}...`;
-  const reader = new FileReader();
-  reader.onload = e => {
-    if (ext === 'txt') {
-      state.content = e.target.result.substring(0, 4000);
-    } else if (ext === 'pdf' || ext === 'ppt' || ext === 'pptx') {
-      // Extract readable text from binary — get printable ASCII runs
-      const raw = e.target.result;
-      const printable = raw.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/ {3,}/g, '  ').trim();
-      const words = printable.match(/[A-Za-z][A-Za-z0-9 ,.\-:;()'"%]{3,}/g) || [];
-      state.content = words.join(' ').substring(0, 4000);
-      if (state.content.length < 100) {
-        if (status) status.textContent = `⚠️ couldn't read much from ${file.name} — try exporting as .txt`;
-        state.content = `Study notes from: ${file.name}`;
-      }
-    } else {
-      state.content = e.target.result.substring(0, 4000);
-    }
-    generateAllContent();
-  };
-  reader.readAsBinaryString(file);
-}
-
-async function generateAllContent() {
-  state.phase = 'loading';
-  const sys = 'You generate study game content. Return ONLY valid JSON. No markdown, no backticks, no explanation. Just raw JSON.';
-  const c = state.content.substring(0, 2000);
-
-  try {
-    state.loadingMsg = 'generating quiz questions...'; render();
-    const r1 = await callClaude(`Content: "${c}"\n\nGenerate 7 multiple choice questions. Return JSON array only: [{"question":"...","options":["A","B","C","D"],"correct":0},...]  correct is index 0-3.`, sys);
-    try { state.questions.r1 = JSON.parse(r1.replace(/```json|```/g,'').trim()); } catch(e) { state.questions.r1 = getFallbackQuiz(); }
-
-    state.loadingMsg = 'building memory cards...'; render();
-    const r2 = await callClaude(`Content: "${c}"\n\nGenerate 7 term-definition pairs. Return JSON array only: [{"term":"...","definition":"..."},...]`, sys);
-    try { buildMemoryCards(JSON.parse(r2.replace(/```json|```/g,'').trim())); } catch(e) { buildMemoryCards(getFallbackPairs()); }
-
-    state.loadingMsg = 'creating concept map...'; render();
-    const r3 = await callClaude(`Content: "${c}"\n\nGenerate 8 key concepts and 5 connections. Return JSON only: {"concepts":["A","B","C","D","E","F","G","H"],"connections":[[0,1],[1,2],[2,3],[3,4],[5,6]]}`, sys);
-    try { const d=JSON.parse(r3.replace(/```json|```/g,'').trim()); buildConceptNodes(d.concepts,d.connections); } catch(e) { buildConceptNodes(getFallbackConcepts(),[[0,1],[1,2],[2,3]]); }
-
-    state.loadingMsg = 'setting up trivia wheel...'; render();
-    const r4 = await callClaude(`Content: "${c}"\n\nGenerate 6 short topic names (2-3 words each). Return JSON array only: ["Topic One","Topic Two",...]`, sys);
-    try { state.wheelTopics = JSON.parse(r4.replace(/```json|```/g,'').trim()); } catch(e) { state.wheelTopics = ['Networks','Protocols','Hardware','Security','Addressing','OSI Model']; }
-
-    state.loadingMsg = 'preparing teach topics...'; render();
-    const r5 = await callClaude(`Content: "${c}"\n\nGenerate 2 key concepts a student should explain. Return JSON array only: ["Concept One","Concept Two"]`, sys);
-    try { state.questions.r5 = JSON.parse(r5.replace(/```json|```/g,'').trim()); } catch(e) { state.questions.r5 = ['IP Addressing and Subnetting','The OSI Model and its layers']; }
-
-    state.phase='round-intro'; state.currentRound=0; render();
-  } catch(err) {
-    console.error(err);
-    if (err.message === 'RATE_LIMIT') {
-      state.phase = 'upload';
-      render();
-      const status = document.getElementById('upload-status');
-      if (status) status.innerHTML = `<span style="color:var(--pixel-red)">⚠️ Rate limit hit — wait a few minutes and try again, or check your OpenRouter credits at openrouter.ai</span>`;
-      return;
-    }
-    state.questions.r1 = getFallbackQuiz();
-    buildMemoryCards(getFallbackPairs());
-    buildConceptNodes(getFallbackConcepts(),[[0,1],[1,2],[2,3]]);
-    state.wheelTopics = ['Networks','Protocols','Hardware','Security','Addressing','OSI Model'];
-    state.questions.r5 = ['IP Addressing','The OSI Model'];
-    state.phase='round-intro'; state.currentRound=0; render();
+function answerQuiz(idx) {
+  const q = CHAPTERS[state.chapter].quiz[state.currentQ];
+  if (!q) return;
+  document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+  const correct = idx === q.c;
+  document.getElementById(`opt-${idx}`).classList.add(correct ? 'correct' : 'wrong');
+  if (!correct) {
+    document.getElementById(`opt-${q.c}`).classList.add('correct');
+    state.combo = 0;
+    state.lives = Math.max(0, state.lives - 1);
+    showWrong(q.opts[q.c]);
+    setTimeout(() => { state.currentQ++; if (state.currentQ >= 7) advanceRound(); else render(); }, 3400);
+  } else {
+    state.combo++;
+    state.maxCombo = Math.max(state.maxCombo, state.combo);
+    const pts = 10 + (state.combo > 2 ? 5 : 0);
+    state.score += pts;
+    state.roundScores[0] += pts;
+    showCorrect(pts);
+    setTimeout(() => { state.currentQ++; if (state.currentQ >= 7) advanceRound(); else render(); }, 1600);
   }
 }
 
-function getFallbackQuiz() {
-  return [
-    {question:'What does IP stand for?',options:['Internet Protocol','Internal Process','Input Packet','Interface Port'],correct:0},
-    {question:'Which OSI layer handles routing?',options:['Data Link','Transport','Network','Session'],correct:2},
-    {question:'What port does HTTPS use?',options:['80','8080','443','22'],correct:2},
-    {question:'What does DNS do?',options:['Assign IP addresses','Resolve domain names','Encrypt traffic','Filter packets'],correct:1},
-    {question:'What does a switch do?',options:['Connects different networks','Assigns IP addresses','Connects LAN devices','Encrypts data'],correct:2},
-    {question:'IPv4 addresses are how many bits?',options:['16','32','64','128'],correct:1},
-    {question:'What does DHCP assign automatically?',options:['MAC addresses','IP addresses','DNS servers','Port numbers'],correct:1}
-  ];
-}
-
-function getFallbackPairs() {
-  return [
-    {term:'Router',definition:'Forwards packets between networks'},
-    {term:'DNS',definition:'Converts domain names to IPs'},
-    {term:'DHCP',definition:'Assigns IP addresses automatically'},
-    {term:'Firewall',definition:'Filters network traffic by rules'},
-    {term:'VPN',definition:'Creates encrypted secure tunnel'},
-    {term:'Switch',definition:'Connects devices in same LAN'},
-    {term:'Bandwidth',definition:'Maximum data transfer rate'}
-  ];
-}
-
-function getFallbackConcepts() { return ['IP Address','Router','DNS','Firewall','Switch','DHCP','Protocol','Packet']; }
-
+// =============================================
+// ROUND 2 — MEMORY MATCH
+// =============================================
 function buildMemoryCards(pairs) {
   const cards = [];
   pairs.forEach((p,i) => {
     cards.push({text:p.term, pairId:i, type:'term'});
-    cards.push({text:p.definition, pairId:i, type:'def'});
+    cards.push({text:p.def, pairId:i, type:'def'});
   });
   for (let i=cards.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [cards[i],cards[j]]=[cards[j],cards[i]]; }
-  state.memCards=cards; state.memFlipped=[]; state.memMatched=[];
+  state.memCards = cards;
+  state.memFlipped = [];
+  state.memMatched = [];
 }
 
+function renderMemory() {
+  const matched = state.memMatched.length / 2;
+  return `<div>
+    ${renderRoundPips()}${renderScoreBar()}
+    <div class="section-title">🃏 MEMORY MATCH</div>
+    <div class="section-sub">match all 7 term/definition pairs — ${matched}/7 matched</div>
+    <div class="memory-grid">
+      ${state.memCards.map((c,i) => {
+        const flipped = state.memFlipped.includes(i);
+        const matched = state.memMatched.includes(i);
+        return `<div class="mem-card ${flipped?'flipped':''} ${matched?'matched':''}" id="mc-${i}" onclick="flipCard(${i})">${(flipped||matched)?c.text:''}</div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+let memLock = false;
+function flipCard(i) {
+  if (memLock||state.memMatched.includes(i)||state.memFlipped.includes(i)||state.memFlipped.length>=2) return;
+  state.memFlipped.push(i);
+  render();
+  if (state.memFlipped.length === 2) {
+    memLock = true;
+    const [a,b] = state.memFlipped;
+    const ca = state.memCards[a], cb = state.memCards[b];
+    setTimeout(() => {
+      if (ca.pairId===cb.pairId && ca.type!==cb.type) {
+        state.memMatched.push(a,b);
+        state.score += 10;
+        state.roundScores[1] += 10;
+        state.combo++;
+        state.maxCombo = Math.max(state.maxCombo, state.combo);
+        showCorrect(10);
+      } else {
+        state.combo = 0;
+        const c1=document.getElementById(`mc-${a}`), c2=document.getElementById(`mc-${b}`);
+        if(c1){c1.classList.add('shake');setTimeout(()=>c1.classList.remove('shake'),400);}
+        if(c2){c2.classList.add('shake');setTimeout(()=>c2.classList.remove('shake'),400);}
+      }
+      state.memFlipped = [];
+      memLock = false;
+      if (state.memMatched.length >= 14) setTimeout(()=>advanceRound(), 600);
+      else render();
+    }, 900);
+  }
+}
+
+// =============================================
+// ROUND 3 — CONCEPT MAP
+// =============================================
 function buildConceptNodes(concepts, connections) {
   const pos = [{x:20,y:20},{x:180,y:20},{x:340,y:20},{x:480,y:20},{x:60,y:140},{x:220,y:140},{x:390,y:140},{x:150,y:260}];
   state.conceptNodes = concepts.slice(0,8).map((c,i)=>({
@@ -1159,81 +1248,55 @@ function buildConceptNodes(concepts, connections) {
   state.conceptConnections = connections || [];
 }
 
-function startRound() {
-  const phases=['r1','r2','r3','r4','r5'];
-  state.phase=phases[state.currentRound];
-  state.currentQ=0; state.connectMode=false; state.connectFrom=null;
-  state.currentWheelTopic=''; state.wheelSpinning=false;
-  render();
-}
-
-function answerQuiz(idx) {
-  const q=state.questions.r1[state.currentQ];
-  if(!q) return;
-  document.querySelectorAll('.option-btn').forEach(b=>b.disabled=true);
-  const correct=idx===q.correct;
-  document.getElementById(`opt-${idx}`).classList.add(correct?'correct':'wrong');
-  if(!correct) document.getElementById(`opt-${q.correct}`).classList.add('correct');
-  if(correct) {
-    state.combo++; state.maxCombo=Math.max(state.maxCombo,state.combo);
-    const pts=10+(state.combo>2?5:0);
-    state.score+=pts; state.roundScores[0]+=pts;
-    showFeedback(true,pts);
-  } else { state.combo=0; state.lives=Math.max(0,state.lives-1); showFeedback(false,0); }
-  setTimeout(()=>{ state.currentQ++; if(state.currentQ>=7) advanceRound(); else render(); }, 1600);
-}
-
-let memLock=false;
-function flipCard(i) {
-  if(memLock||state.memMatched.includes(i)||state.memFlipped.includes(i)||state.memFlipped.length>=2) return;
-  state.memFlipped.push(i); render();
-  if(state.memFlipped.length===2) {
-    memLock=true;
-    const [a,b]=state.memFlipped;
-    const ca=state.memCards[a], cb=state.memCards[b];
-    setTimeout(()=>{
-      if(ca.pairId===cb.pairId&&ca.type!==cb.type) {
-        state.memMatched.push(a,b); state.score+=10; state.roundScores[1]+=10;
-        state.combo++; state.maxCombo=Math.max(state.maxCombo,state.combo);
-        showFeedback(true,10);
-      } else {
-        state.combo=0; showFeedback(false,0);
-        const c1=document.getElementById(`mc-${a}`), c2=document.getElementById(`mc-${b}`);
-        if(c1){c1.classList.add('shake');setTimeout(()=>c1.classList.remove('shake'),400);}
-        if(c2){c2.classList.add('shake');setTimeout(()=>c2.classList.remove('shake'),400);}
-      }
-      state.memFlipped=[]; memLock=false;
-      if(state.memMatched.length>=14) setTimeout(()=>advanceRound(),600); else render();
-    },900);
-  }
+function renderConceptMap() {
+  const nodes = state.conceptNodes;
+  const conns = state.conceptConnections;
+  return `<div>
+    ${renderRoundPips()}${renderScoreBar()}
+    <div class="section-title">🗺️ CONCEPT MAP</div>
+    <div class="section-sub">drag nodes, use connect mode to draw links, then submit</div>
+    <div class="connect-btn-wrap">
+      <button class="small-btn ${state.connectMode?'active':''}" onclick="toggleConnectMode()">${state.connectMode?'✓ CONNECTING':'⬡ CONNECT MODE'}</button>
+      <button class="small-btn" onclick="clearConnections()">✕ CLEAR LINKS</button>
+    </div>
+    <div class="concept-map-area" id="cmap">
+      <svg id="cmap-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none">
+        ${conns.map(c=>{const n1=nodes[c[0]],n2=nodes[c[1]];return`<line x1="${n1.x+55}" y1="${n1.y+16}" x2="${n2.x+55}" y2="${n2.y+16}" stroke="#FFD700" stroke-width="2" stroke-dasharray="5,3" opacity="0.7"/>`;}).join('')}
+      </svg>
+      ${nodes.map((n,i)=>`<div class="concept-node ${state.connectFrom===i?'selected':''}" id="cn-${i}" style="left:${n.x}px;top:${n.y}px" onmousedown="startDrag(event,${i})" onclick="handleNodeClick(${i})">${n.label}</div>`).join('')}
+    </div>
+    ${conns.length>0?`<div class="connection-list">${conns.map(c=>`<div class="connection-item">↔ ${nodes[c[0]].label} — ${nodes[c[1]].label}</div>`).join('')}</div>`:''}
+    <div id="cmap-feedback"></div>
+    <button class="action-btn" onclick="checkConceptMap()">✓ SUBMIT CONCEPT MAP</button>
+  </div>`;
 }
 
 function toggleConnectMode() { state.connectMode=!state.connectMode; state.connectFrom=null; render(); }
 function clearConnections() { state.conceptConnections=[]; render(); }
 
 function handleNodeClick(i) {
-  if(!state.connectMode) return;
-  if(state.connectFrom===null) { state.connectFrom=i; render(); return; }
-  if(state.connectFrom!==i) {
+  if (!state.connectMode) return;
+  if (state.connectFrom===null) { state.connectFrom=i; render(); return; }
+  if (state.connectFrom!==i) {
     const exists=state.conceptConnections.some(c=>(c[0]===state.connectFrom&&c[1]===i)||(c[0]===i&&c[1]===state.connectFrom));
-    if(!exists) state.conceptConnections.push([state.connectFrom,i]);
+    if (!exists) state.conceptConnections.push([state.connectFrom,i]);
   }
   state.connectFrom=null; render();
 }
 
-let dragIdx=null, dragOX=0, dragOY=0;
+let dragIdx=null,dragOX=0,dragOY=0;
 function startDrag(e,i) {
-  if(state.connectMode) return;
+  if (state.connectMode) return;
   dragIdx=i;
   const area=document.getElementById('cmap');
-  if(!area) return;
+  if (!area) return;
   const rect=area.getBoundingClientRect();
   dragOX=e.clientX-rect.left-state.conceptNodes[i].x;
   dragOY=e.clientY-rect.top-state.conceptNodes[i].y;
   document.onmousemove=ev=>{
-    if(dragIdx===null) return;
+    if (dragIdx===null) return;
     const ar=document.getElementById('cmap');
-    if(!ar) return;
+    if (!ar) return;
     const r=ar.getBoundingClientRect();
     state.conceptNodes[dragIdx].x=Math.max(0,Math.min(r.width-120,ev.clientX-r.left-dragOX));
     state.conceptNodes[dragIdx].y=Math.max(0,Math.min(r.height-40,ev.clientY-r.top-dragOY));
@@ -1249,123 +1312,263 @@ function startDrag(e,i) {
   e.preventDefault();
 }
 
-async function checkConceptMap() {
-  if(state.conceptConnections.length<2) {
+function checkConceptMap() {
+  if (state.conceptConnections.length < 2) {
     const fb=document.getElementById('cmap-feedback');
     if(fb) fb.innerHTML=`<div class="status-msg" style="color:var(--pixel-red)">connect at least 2 pairs first!</div>`;
     return;
   }
-  const fb=document.getElementById('cmap-feedback');
-  if(fb) fb.innerHTML=`<div class="status-msg">🤖 AI is checking your connections...</div>`;
-  const nodes=state.conceptNodes;
-  const conns=state.conceptConnections.map(c=>`${nodes[c[0]].label} ↔ ${nodes[c[1]].label}`).join(', ');
-  try {
-    const raw=await callClaude(`Content: "${state.content.substring(0,500)}"\n\nStudent connected: ${conns}\n\nScore their concept map out of 30 based on conceptual accuracy. Return JSON only: {"score":22,"feedback":"Good connections! You correctly linked..."}`, 'Return only JSON. No markdown.');
-    const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
-    const pts=Math.min(30,parsed.score||15);
-    state.score+=pts; state.roundScores[2]+=pts;
-    if(fb) fb.innerHTML=`<div class="ai-response-box">${parsed.feedback}</div><div style="font-size:9px;color:var(--sun);margin:8px 0">+${pts}/30 pts earned</div>`;
-    showFeedback(pts>=15,pts);
-    setTimeout(()=>advanceRound(),2800);
-  } catch(e) {
-    const pts=state.conceptConnections.length>=3?20:12;
-    state.score+=pts; state.roundScores[2]+=pts;
-    if(fb) fb.innerHTML=`<div class="ai-response-box">Good effort on your concept map! +${pts} pts.</div>`;
-    showFeedback(true,pts);
-    setTimeout(()=>advanceRound(),2000);
+  const pts = Math.min(30, state.conceptConnections.length * 6);
+  state.score += pts;
+  state.roundScores[2] += pts;
+  const fb = document.getElementById('cmap-feedback');
+  if(fb) fb.innerHTML=`<div class="ai-response-box">Concept map recorded! ${state.conceptConnections.length} connections made. +${pts}/30 pts</div>`;
+  showCorrect(pts);
+  setTimeout(()=>advanceRound(), 2000);
+}
+
+// =============================================
+// ROUND 4 — TRIVIA WHEEL
+// =============================================
+function renderTriviaWheel() {
+  const topics = CHAPTERS[state.chapter].wheel;
+  const n = topics.length;
+  const colors = ['#FFD700','#FFA500','#32CD32','#00BFFF','#FF6B6B','#C084FC'];
+  const cx=140,cy=140,r=120;
+  let wheelSVG = `<svg width="280" height="280" class="wheel-svg">`;
+  topics.forEach((t,i) => {
+    const startA = (2*Math.PI/n)*i - Math.PI/2;
+    const endA = (2*Math.PI/n)*(i+1) - Math.PI/2;
+    const x1=cx+r*Math.cos(startA),y1=cy+r*Math.sin(startA);
+    const x2=cx+r*Math.cos(endA),y2=cy+r*Math.sin(endA);
+    const midA=(startA+endA)/2;
+    const tx=cx+(r*0.65)*Math.cos(midA),ty=cy+(r*0.65)*Math.sin(midA);
+    const short=t.length>12?t.substring(0,11)+'…':t;
+    wheelSVG+=`<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z" fill="${colors[i%colors.length]}" stroke="#0d0d1a" stroke-width="2"/>`;
+    wheelSVG+=`<text x="${tx}" y="${ty}" fill="#0d0d1a" font-family="'Press Start 2P',monospace" font-size="6" text-anchor="middle" dominant-baseline="middle" transform="rotate(${(midA+Math.PI/2)*180/Math.PI},${tx},${ty})">${short}</text>`;
+  });
+  wheelSVG+=`<circle cx="${cx}" cy="${cy}" r="18" fill="#0d0d1a" stroke="#FFD700" stroke-width="3"/>`;
+  wheelSVG+=`<polygon points="${cx},${cy-r-10} ${cx-8},${cy-r+14} ${cx+8},${cy-r+14}" fill="#FFD700"/>`;
+  wheelSVG+=`</svg>`;
+
+  if (state.currentWheelTopic) {
+    const triviaQ = getTriviaQ();
+    return `<div>
+      ${renderRoundPips()}${renderScoreBar()}
+      <div class="section-title">🎯 TOPIC: ${state.currentWheelTopic}</div>
+      <div class="question-text">${triviaQ.q}</div>
+      <div class="options-grid">
+        ${triviaQ.opts.map((o,i)=>`<button class="option-btn" id="topt-${i}" onclick="answerTrivia(${i})">${String.fromCharCode(65+i)}. ${o}</button>`).join('')}
+      </div>
+      <div class="section-sub">${state.currentQ+1}/2 trivia questions</div>
+    </div>`;
   }
+
+  return `<div>
+    ${renderRoundPips()}${renderScoreBar()}
+    <div class="section-title">🎯 TRIVIA WHEEL</div>
+    <div class="section-sub">spin to get a random topic, then answer!</div>
+    <div class="wheel-wrap"><div id="wheel-container">${wheelSVG}</div></div>
+    <button class="spin-btn" id="spin-btn" onclick="spinWheel()" ${state.wheelSpinning?'disabled':''}>
+      ${state.wheelSpinning?'SPINNING...':'▶ SPIN THE WHEEL'}
+    </button>
+  </div>`;
+}
+
+function getTriviaQ() {
+  const ch = CHAPTERS[state.chapter];
+  const topicIdx = ch.wheel.indexOf(state.currentWheelTopic);
+  // Generate a trivia question from quiz bank based on topic index
+  const qIdx = (topicIdx + state.currentQ * 2) % ch.quiz.length;
+  return ch.quiz[qIdx];
 }
 
 function spinWheel() {
-  if(state.wheelSpinning||state.currentWheelTopic) return;
-  state.wheelSpinning=true; render();
-  const extra=1440+Math.floor(Math.random()*360);
-  const target=state.wheelAngle+extra;
-  const start=performance.now(), dur=3200, from=state.wheelAngle;
+  if (state.wheelSpinning || state.currentWheelTopic) return;
+  state.wheelSpinning = true;
+  render();
+  const topics = CHAPTERS[state.chapter].wheel;
+  const extra = 1440 + Math.floor(Math.random()*360);
+  const target = state.wheelAngle + extra;
+  const start = performance.now(), dur = 3200, from = state.wheelAngle;
   function frame(now) {
-    const t=Math.min(1,(now-start)/dur);
-    const ease=1-Math.pow(1-t,3);
-    state.wheelAngle=from+(target-from)*ease;
-    const g=document.getElementById('wheel-g');
-    if(g) g.setAttribute('transform',`rotate(${state.wheelAngle}, 140, 140)`);
-    if(t<1) requestAnimationFrame(frame);
+    const t = Math.min(1,(now-start)/dur);
+    const ease = 1-Math.pow(1-t,3);
+    state.wheelAngle = from + (target-from)*ease;
+    const container = document.getElementById('wheel-container');
+    if (container) {
+      const svgEl = container.querySelector('svg');
+      if (svgEl) {
+        let g = svgEl.querySelector('g.wheel-rotate');
+        if (!g) {
+          g = document.createElementNS('http://www.w3.org/2000/svg','g');
+          g.classList.add('wheel-rotate');
+          while(svgEl.firstChild) g.appendChild(svgEl.firstChild);
+          svgEl.appendChild(g);
+        }
+        g.setAttribute('transform',`rotate(${state.wheelAngle},140,140)`);
+      }
+    }
+    if (t < 1) requestAnimationFrame(frame);
     else {
-      state.wheelSpinning=false;
-      const n=state.wheelTopics.length;
-      const norm=((360-(state.wheelAngle%360))+360)%360;
-      const idx=Math.floor((norm/360)*n)%n;
-      state.currentWheelTopic=state.wheelTopics[idx];
-      loadTriviaQuestion();
+      state.wheelSpinning = false;
+      const n = topics.length;
+      const norm = ((360-(state.wheelAngle%360))+360)%360;
+      const idx = Math.floor((norm/360)*n)%n;
+      state.currentWheelTopic = topics[idx];
+      render();
     }
   }
   requestAnimationFrame(frame);
 }
 
-async function loadTriviaQuestion() {
-  if(state.questions.r4[state.currentQ]){render();return;}
-  try {
-    const raw=await callClaude(`Content: "${state.content.substring(0,800)}"\nTopic: ${state.currentWheelTopic}\n\nGenerate 1 MCQ about this topic. Return JSON only: {"question":"...","options":["A","B","C","D"],"correct":0}`, 'Return only JSON.');
-    state.questions.r4[state.currentQ]=JSON.parse(raw.replace(/```json|```/g,'').trim());
-  } catch(e) {
-    state.questions.r4[state.currentQ]={question:`Key fact about ${state.currentWheelTopic}?`,options:['Option A','Option B','Option C','Option D'],correct:0};
+function answerTrivia(idx) {
+  const q = getTriviaQ();
+  if (!q) return;
+  document.querySelectorAll('.option-btn').forEach(b=>b.disabled=true);
+  const correct = idx===q.c;
+  document.getElementById(`topt-${idx}`).classList.add(correct?'correct':'wrong');
+  if (!correct) {
+    document.getElementById(`topt-${q.c}`).classList.add('correct');
+    state.combo=0;
+    showWrong(q.opts[q.c]);
+    setTimeout(()=>{ state.currentQ++; state.currentWheelTopic=''; if(state.currentQ>=2) advanceRound(); else render(); },3400);
+  } else {
+    state.score+=15; state.roundScores[3]+=15;
+    state.combo++; state.maxCombo=Math.max(state.maxCombo,state.combo);
+    showCorrect(15);
+    setTimeout(()=>{ state.currentQ++; state.currentWheelTopic=''; if(state.currentQ>=2) advanceRound(); else render(); },1600);
   }
+}
+
+// =============================================
+// ROUND 5 — TEACH THE AI (offline grader)
+// =============================================
+function renderTeachAI() {
+  const ch = CHAPTERS[state.chapter];
+  const topic = ch.teach[state.teachQ];
+  const grade = state.teachGrades[state.teachQ];
+
+  if (grade) {
+    return `<div>
+      ${renderRoundPips()}${renderScoreBar()}
+      <div class="section-title">🤖 GRADED!</div>
+      <div class="teach-grade grade-${grade.letter.toLowerCase()}">${grade.letter} — ${grade.score}/20 pts</div>
+      <div class="ai-response-box">${grade.feedback}</div>
+      <button class="action-btn" onclick="nextTeach()">▶ ${state.teachQ<1?'NEXT TOPIC':'SEE FINAL SCORE'}</button>
+    </div>`;
+  }
+
+  return `<div>
+    ${renderRoundPips()}${renderScoreBar()}
+    <div class="section-title">🤖 TEACH THE AI</div>
+    <div class="section-sub">topic ${state.teachQ+1}/2</div>
+    <div class="question-text">Explain in your own words:<br>${topic}</div>
+    <textarea class="teach-textarea" id="teach-input" placeholder="type your explanation here...">${state.teachAnswers[state.teachQ]}</textarea>
+    <button class="action-btn" onclick="submitTeach()">▶ SUBMIT EXPLANATION</button>
+  </div>`;
+}
+
+function gradeTeach(text, topicIdx) {
+  const ch = CHAPTERS[state.chapter];
+  const topic = ch.teach[topicIdx];
+  const keywords = getKeywords(topicIdx);
+  const lower = text.toLowerCase();
+  let matched = 0;
+  keywords.forEach(k => { if(lower.includes(k.toLowerCase())) matched++; });
+  const ratio = matched / keywords.length;
+  const wordCount = text.trim().split(/\s+/).length;
+  let score = Math.round(ratio * 16) + (wordCount > 40 ? 3 : wordCount > 20 ? 1 : 0);
+  score = Math.min(20, Math.max(4, score));
+  let letter = score >= 17 ? 'A' : score >= 13 ? 'B' : 'C';
+  let feedback = '';
+  if (score >= 17) feedback = `Excellent explanation of "${topic}"! You clearly understand the key concepts. ${matched}/${keywords.length} key terms covered — impressive recall.`;
+  else if (score >= 13) feedback = `Good effort on "${topic}". You covered the main ideas. Try to also include: ${keywords.filter(k=>!lower.includes(k.toLowerCase())).slice(0,3).join(', ')}.`;
+  else feedback = `Your explanation of "${topic}" needs more depth. Key concepts to revisit: ${keywords.filter(k=>!lower.includes(k.toLowerCase())).slice(0,4).join(', ')}. Go back to your notes!`;
+  return { letter, score, feedback };
+}
+
+function getKeywords(topicIdx) {
+  const ch = state.chapter;
+  const keywordSets = {
+    5: [
+      ['legitimate','expert','referent','reward','coercive','French','Raven','power','influence'],
+      ['curvilinear','inverted','moderate','conflict','performance','low','high','innovation','tension']
+    ],
+    6: [
+      ['directing','coaching','selling','supporting','delegating','Hersey','Blanchard','maturity','readiness','task','relationship'],
+      ['cynicism','spiral','distrust','secretive','authoritarian','trust','transparency','employees','management']
+    ],
+    7: [
+      ['pilot','parallel running','big bang','implementation','risk','scale','consolidation','test'],
+      ['Carnall','performance','structure','resonance','accelerator','leadership','culture','ambition','capability','convergent']
+    ],
+    8: [
+      ['action research','diagnosis','vision','commitment','implement','assess','reinforce','collaborative','OD'],
+      ['unfreeze','move','refreeze','Lewin','embedding','refreezing','behaviours','culture','reward']
+    ]
+  };
+  return keywordSets[ch][topicIdx] || ['change','management','organization'];
+}
+
+function submitTeach() {
+  const input = document.getElementById('teach-input');
+  if (!input || !input.value.trim() || input.value.trim().split(/\s+/).length < 8) {
+    input.style.borderColor='var(--pixel-red)';
+    return;
+  }
+  const text = input.value.trim();
+  state.teachAnswers[state.teachQ] = text;
+  const grade = gradeTeach(text, state.teachQ);
+  state.teachGrades[state.teachQ] = grade;
+  state.score += grade.score;
+  state.roundScores[4] += grade.score;
+  if (grade.score >= 13) showCorrect(grade.score);
   render();
 }
 
-function answerTrivia(idx) {
-  const q=state.questions.r4[state.currentQ];
-  if(!q) return;
-  document.querySelectorAll('.option-btn').forEach(b=>b.disabled=true);
-  const correct=idx===q.correct;
-  document.getElementById(`topt-${idx}`).classList.add(correct?'correct':'wrong');
-  if(!correct) document.getElementById(`topt-${q.correct}`).classList.add('correct');
-  if(correct){state.score+=15;state.roundScores[3]+=15;state.combo++;state.maxCombo=Math.max(state.maxCombo,state.combo);showFeedback(true,15);}
-  else{state.combo=0;showFeedback(false,0);}
-  setTimeout(()=>{state.currentQ++;state.currentWheelTopic='';if(state.currentQ>=2)advanceRound();else render();},1600);
-}
-
-async function submitTeach() {
-  const input=document.getElementById('teach-input');
-  if(!input||!input.value.trim()) return;
-  state.loading=true; render();
-  const explanation=input.value.trim();
-  const topic=state.questions.r5[state.teachQ];
-  try {
-    const raw=await callClaude(`The student was asked to explain: "${topic}"\nContext: "${state.content.substring(0,600)}"\nStudent wrote: "${explanation}"\n\nGrade their explanation on accuracy and completeness. Be encouraging but honest. Score out of 20. Return JSON only: {"grade":"A","score":17,"feedback":"Great explanation! You correctly covered..."}`, 'Return only JSON. Grades: A=17-20, B=13-16, C=0-12.');
-    const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
-    state.aiResponses[state.teachQ]=parsed;
-    const pts=Math.min(20,parsed.score||10);
-    state.score+=pts; state.roundScores[4]+=pts;
-    showFeedback(parsed.score>=13,pts);
-  } catch(e) {
-    state.aiResponses[state.teachQ]={grade:'B',score:14,feedback:'Good effort! Your explanation covered the main points. Keep practicing to fill the gaps.'};
-    state.score+=14; state.roundScores[4]+=14;
-    showFeedback(true,14);
-  }
-  state.loading=false; render();
-}
-
 function nextTeach() {
-  if(state.teachQ<1){state.teachQ++;state.loading=false;render();}
-  else{state.phase='scoreboard';render();}
+  if (state.teachQ < 1) { state.teachQ++; render(); }
+  else { state.phase = 'scoreboard'; render(); }
+}
+
+// =============================================
+// SCOREBOARD
+// =============================================
+function renderScoreboard() {
+  const total = state.score;
+  const maxPossible = 7*15 + 7*10 + 30 + 2*15 + 2*20;
+  const pct = Math.round((total/maxPossible)*100);
+  let grade='F', remark='';
+  if(pct>=90){grade='S';remark='ULTRA INSTINCT MODE ACTIVATED 🌻 You are a machine. Baap kaafi proud hain.';}
+  else if(pct>=75){grade='A';remark='WAH WAH! 🌻 Strong performance. A few gaps but overall excellent. Keep going!';}
+  else if(pct>=60){grade='B';remark='Not bad! 📚 You know the material but some concepts need a revisit. Almost there.';}
+  else if(pct>=45){grade='C';remark='Theek hai yaar 😅 You have the basics but a lot of revision needed. Open those slides!';}
+  else{grade='D';remark='Baap ko math sikana padega 😤 Back to basics. Read the chapter again slowly.';}
+
+  return `<div class="scoreboard">
+    <div class="sunflower-field-emoji">🌻🌱🌻🌱🌻🌱🌻</div>
+    <div class="section-title">GAME OVER</div>
+    <div class="section-sub">Chapter ${state.chapter}: ${CHAPTERS[state.chapter].name}</div>
+    <div class="grade-badge">GRADE: ${grade}</div>
+    <div class="score-big">${total}</div>
+    <div style="font-size:8px;color:#666;margin-bottom:12px">${pct}% accuracy · max combo: ${state.maxCombo}</div>
+    <div class="round-breakdown">
+      ${ROUND_NAMES.map((n,i)=>`<div class="round-row"><span>${ROUND_ICONS[i]} ${n}</span><span class="round-row-score">+${state.roundScores[i]}</span></div>`).join('')}
+    </div>
+    <div class="remarks-box">🌻 ${remark}</div>
+    <button class="action-btn" onclick="state.phase='chapter-select';render()">▶ PLAY ANOTHER CHAPTER</button>
+    <button class="action-btn" onclick="selectChapter(state.chapter)" style="margin-top:6px;background:rgba(0,255,65,0.05);border-color:rgba(0,255,65,0.4);color:var(--pixel-green);box-shadow:var(--glow-green)">↺ RETRY SAME CHAPTER</button>
+  </div>`;
 }
 
 function advanceRound() {
   state.currentRound++;
-  if(state.currentRound>=5){state.phase='scoreboard';render();}
-  else{state.phase='round-intro';render();}
+  if (state.currentRound >= 5) { state.phase='scoreboard'; render(); }
+  else { state.phase='round-intro'; render(); }
 }
 
-function restartGame() {
-  Object.assign(state,{
-    phase:'intro',score:0,roundScores:[0,0,0,0,0],combo:0,maxCombo:0,lives:3,
-    currentRound:0,currentQ:0,content:'',questions:{r1:[],r2:[],r3:[],r4:[],r5:[]},
-    memCards:[],memFlipped:[],memMatched:[],conceptNodes:[],conceptConnections:[],
-    connectMode:false,connectFrom:null,wheelAngle:0,wheelSpinning:false,
-    wheelTopics:[],currentWheelTopic:'',teachQ:0,aiResponses:[],loading:false,loadingMsg:''
-  });
-  render();
-}
+function attachEvents() {}
 
 render();
 </script>
