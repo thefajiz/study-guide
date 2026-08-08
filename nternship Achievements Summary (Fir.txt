@@ -1,0 +1,86 @@
+nternship Achievements Summary (First 3 Weeks)
+During my first three weeks as an intern, I have contributed across multiple operational and technical areas, demonstrating strong adaptability and productivity:
+Ticket Resolution (Freshservice): Successfully closed 45 service tickets covering a range of requests, including headset replacements, PC upgrades, and username updates.
+Intern Onboarding Support: Assisted in onboarding 20+ interns, ensuring smooth setup of systems and access.
+Asset Recovery & System Restoration:
+Completed 20+ PC wipes and restorations
+Performed 5–10 laptop wipes and restorations
+Device Management & Assessment: Conducted 20+ device status assessments to evaluate usability and readiness.
+Directory & Data Management: Manually updated 250 employee records in Microsoft Entra.
+Hardware Provisioning:
+Onboarded 10+ desktop PCs and 5 laptops
+Configured a dual monitor setup for an end user
+Autopilot & Device Configuration: Assigned 5+ devices to Windows Autopilot that were previously unregistered.
+Asset Tracking & Inventory:
+Managed asset assignment and association processes
+Maintained tracking of consumables and equipment, including AA and AAA batteries
+These contributions reflect consistent performance in IT support operations, asset lifecycle management, and user onboarding within a short timeframe.
+
+
+Internship Achievement Summary
+Service Desk & IT Operations
+Managed 147 assigned IT service requests across Hardware, IT Support, Workplace Services, Identity & Access Management, and Service Request Fulfillment teams.
+Successfully resolved the vast majority of assigned tickets, supporting end users across the organization.
+Employee Onboarding & Offboarding
+Supported onboarding of multiple employees and 20+ interns, including:
+Entra ID account creation
+Access card provisioning
+Device provisioning
+Desk assignments
+Executed secure offboarding processes:
+Entra ID deprovisioning
+Asset recovery
+Desk unassignment
+Access revocation.
+Identity & Access Management
+Processed numerous Microsoft Entra ID requests including:
+Account creation
+Account reactivation
+SSO application access grants
+User access administration.
+Hardware & Endpoint Management
+Provisioned and configured:
+Windows laptops
+Developer laptops
+macOS developer desktops
+Monitors
+Headsets
+Desktop systems
+Peripheral devices.
+Completed:
+20+ PC wipes and restorations
+5-10 laptop wipes and restorations
+20+ device health/readiness assessments
+Asset Lifecycle Management
+Performed asset tagging, inventory maintenance, asset assignment, recovery, and tracking activities.
+Added newly acquired assets into inventory systems, including Starlink equipment and other IT assets.
+Maintained inventory records and consumable tracking.
+High-Impact Cost Saving Initiative
+Recovered and restored 17 wireless keyboard/mouse sets that were considered unusable due to missing USB receivers (dongles).
+Successfully paired orphaned peripherals with spare/unassigned Logitech receivers instead of replacing the equipment.
+Prevented unnecessary procurement costs and returned 17 asset sets back into active inventory for employee use.
+Security & Compliance
+Conducted WSL2 Enterprise Pilot Validation and Security Control Verification.
+Investigated and validated:
+Secure Boot CA 2023 compliance issues
+UEFI registry validation
+Endpoint security controls.
+Technical Support & Developer Enablement
+Provided developer support involving:
+Docker privileged access
+Homebrew installation
+Composer installation
+Xcode updates
+Audio software deployment.
+Specialized Technical Work
+Investigated RGB sensor failures on an AI robot platform and performed troubleshooting activities.
+Supported business continuity and asset recovery initiatives, including monitor recovery and deployment activities.
+Additional Contributions
+Manually updated 250 employee records in Microsoft Entra.
+Assigned 5+ previously unmanaged devices into Windows Autopilot.
+Onboarded 10+ desktop systems and 5+ laptops.
+Configured dual-monitor workstation deployments.
+Supported desk moves, workspace setup, and workplace readiness activities.
+One-Line Executive Summary
+
+Delivered enterprise IT support across 137 service requests, onboarding/offboarding operations, Entra ID administration, endpoint provisioning, asset lifecycle management, security validation, and inventory governance while saving hardware costs by restoring 17 unusable keyboard/mouse sets through receiver re-pairing instead of replacement.
