@@ -1,1 +1,1 @@
-powershell.exe -ExecutionPolicy Bypass -File .\WSL.ps1 -Action Uninstall -AppName "WSL Ubuntu" -BinaryPath ".\Array-Linux-GoldenImage.tar"
+powershell.exe -ExecutionPolicy Bypass -File .\NodeJS.ps1 -Action Uninstall -AppName "NodeJS" -BinaryPath "{16ACB226-F825-4982-A438-4E2A4D52BC44}" -UninstallRegistryPath "C:\Program Files\nodejs\node.exe"
