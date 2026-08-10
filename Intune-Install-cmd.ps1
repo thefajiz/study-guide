@@ -1,0 +1,1 @@
+powershell.exe -ExecutionPolicy Bypass -File .\WSL.ps1 -Action Install -AppName "WSL Ubuntu" -BinaryPath ".\Array-Linux-GoldenImage.tar"
