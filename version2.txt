@@ -1,0 +1,373 @@
+Version 2 becomes a full Personal Finance Command Center, not just a budget tracker.
+
+🎨 UI & Experience
+Dark Theme
+Background: #0B0F14
+Cards: #121826
+Soft borders
+Modern fintech look
+Pastel Color System
+Income → Mint
+Expenses → Coral
+Savings → Indigo
+Investments → Cyan
+Loans → Amber
+Mobile-Friendly Layout
+Large cards
+Touch-friendly inputs
+Works well in Google Sheets app
+Key metrics visible without scrolling
+Glassmorphism Style
+Semi-transparent cards
+Soft shadows
+Modern dashboard feel
+🏠 Dashboard
+KPI Cards
+
+Shows:
+
+Total Cash
+Investments
+Outstanding Loans
+Total Assets
+Monthly Income
+Monthly Expenses
+Net Savings
+Savings Rate
+🏦 Bank Accounts
+
+Accounts:
+
+Ila
+NBB
+BISB
+Beyon
+STC
+
+Features:
+
+Manual balance update
+Auto total
+Allocation %
+Dashboard sync
+Account Allocation Donut
+
+Shows where money sits:
+
+Ila     ████
+NBB     ██████
+BISB    ██
+Beyon   ███
+STC     █
+
+📈 Investments
+Beyon Flexi Invest
+
+Fields:
+
+Starting Amount
+Rate (default 3.5%)
+Current Balance (manual)
+Date Started
+
+Calculates:
+
+Expected Value
+Daily Growth
+Monthly Growth
+Yearly Projection
+Variance
+
+Example:
+
+Expected: 1,245.50
+Actual:   1,247.12
+
+Variance:
++1.62
+
+💸 Transactions Engine
+
+Master input sheet.
+
+Columns:
+
+Date
+Description
+Category
+Amount
+Type
+Account
+Notes
+
+
+Everything updates from here.
+
+📊 Budget System
+Budget vs Actual
+
+Example:
+
+Groceries
+
+Budget: 100
+Actual: 85
+
+85%
+
+
+Color coding:
+
+Green = Good
+Yellow = Near limit
+Red = Over
+🍔 Category Analytics
+
+Breakdowns:
+
+Housing
+Groceries
+Dining
+Shopping
+Transport
+Utilities
+Entertainment
+Others
+
+Charts:
+
+Category donut
+Category ranking
+Monthly comparison
+💰 Money Lent Tracker
+
+Fields:
+
+Person
+Date
+Amount
+Returned?
+Returned Amount
+Notes
+
+
+Checkbox support.
+
+Example:
+
+Ahmed
+
+100
+
+☑ Returned
+
+
+Outstanding automatically drops.
+
+Dashboard updates.
+
+🚨 Largest Expense Widget
+
+Automatically shows:
+
+Largest Expense
+
+Rent
+BD 220
+
+
+Also:
+
+Top 5 Expenses
+
+📉 Savings Analytics
+
+Metrics:
+
+Savings Rate
+Monthly Savings
+Best Month
+Worst Month
+Savings Gauge
+0% ───── 50% ───── 100%
+
+           ▲
+         42%
+
+🛟 Emergency Fund
+
+Fields:
+
+Current Fund
+
+3 Month Target
+
+6 Month Target
+
+12 Month Target
+
+
+Progress rings:
+
+3 Month Goal
+
+68%
+
+🎯 Goals Tracker
+
+Examples:
+
+Vacation
+Laptop
+Car
+Wedding
+Emergency Fund
+
+
+For each:
+
+Target
+Current
+Remaining
+Progress
+
+💳 Subscription Tracker
+
+Fields:
+
+Service
+Cost
+Renewal Date
+Frequency
+
+
+Calculates:
+
+Monthly Total
+Yearly Total
+
+Alerts:
+
+Coming Due Soon
+
+📅 Recurring Bills
+
+Fields:
+
+Bill
+Amount
+Due Date
+
+
+Dashboard:
+
+Upcoming Bills
+
+🧠 Smart Insights
+
+Auto-generated:
+
+Most Expensive Category
+
+Largest Transaction
+
+Average Daily Spend
+
+Current Savings Rate
+
+Budget Health
+
+📈 Monthly Dashboard
+
+Month selector.
+
+Example:
+
+January ▼
+
+
+Dashboard updates instantly.
+
+All charts refresh.
+
+📆 Annual Analytics
+
+Shows:
+
+Income YTD
+Expenses YTD
+Savings YTD
+
+Charts:
+
+Monthly spending trend
+Monthly income trend
+Savings trend
+🔄 Flowchart Section
+
+Visual finance flow:
+
+Income
+   ↓
+Bank Accounts
+   ↓
+Budget
+   ↓
+Savings
+   ↓
+Beyon Flexi Invest
+
+
+Loans flow:
+
+Money Lent
+    ↓
+Outstanding
+    ↓
+Returned
+
+🏆 Extra Features I'd Add
+Financial Health Score
+82 / 100
+
+
+Based on:
+
+Savings rate
+Emergency fund
+Investment consistency
+Budget discipline
+Recent Transactions Widget
+
+Last 10 transactions.
+
+Quick Entry Area
+
+Small form at dashboard top:
+
++ Add Expense
++ Add Income
+
+Asset Breakdown
+Cash           75%
+Investment     20%
+Loans          5%
+
+Final Workbook Structure
+Dashboard
+Transactions
+Bank Accounts
+Investments
+Money Lent
+Budgets
+Categories
+Monthly Analytics
+Annual Analytics
+Emergency Fund
+Goals
+Subscriptions
+Recurring Bills
+Settings
+Hidden Calculation Engine
+
+This would feel very close to a lightweight fintech app inside Google Sheets.
