@@ -5,56 +5,120 @@ param (
     [string]$LogFilePath = "C:\ProgramData\ArrayIntuneApps\WSLUbuntuLog.txt"
 )
 
-$distroName = "Array-Linux-GoldenImage-v1"
-$installPath = "C:\WSL\Array-Linux-GoldenImage-v1"
+$distroName = "Array-Linux-GoldenImage"
+$installPath = "C:\WSL\Array-Linux-GoldenImage"
 
 # =========================================================
 # Logging
 # =========================================================
 
 function Log-Message {
-    param (
-        [string]$Message
-    )
-
-    $LogFolder = Split-Path $LogFilePath -Parent
-
-    if (-not (Test-Path $LogFolder)) {
-        New-Item -ItemType Directory -Path $LogFolder -Force | Out-Null
-    }
-
-    if (-not (Test-Path $LogFilePath)) {
-        New-Item -ItemType File -Path $LogFilePath -Force | Out-Null
-    }
-
-    $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $LogEntry = "$Timestamp - $Message"
-
-    Write-Output $LogEntry
-    Add-Content -Path $LogFilePath -Value $LogEntry
-}
-
-# =========================================================
-# Detection
-# =========================================================
-
-function Is-DistroInstalled {
-
+    param ([string]$Message)
+    $LogFolder = Split-Path -Path $LogFilePath -Parent
     try {
-
-        $Result = wsl --list --quiet 2>$null | Out-String
-
-        if ($Result -like "*$distroName*") {
-            return $true
+        if (-not (Test-Path -LiteralPath $LogFolder)) {
+            New-Item -ItemType Directory -Path $LogFolder -Force -ErrorAction Stop | Out-Null
         }
-
-        return $false
+        $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+        $LogEntry = "$Timestamp - $Message"
+        Write-Output $LogEntry
+        Add-Content -LiteralPath $LogFilePath -Value $LogEntry -ErrorAction Stop
     }
     catch {
-
-        return $false
+        Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - LOGGING ERROR: $($_.Exception.Message)"
     }
 }
+
+# =========================================================
+# WSL Helpers
+# =========================================================
+
+function Get-InstalledDistros {
+    $distroNames = New-Object System.Collections.Generic.List[string]
+    $output = @(& wsl.exe --list --quiet 2>$null)
+    foreach ($line in $output) {
+        if ($null -ne $line) {
+            $trimmed = $line.ToString().Trim()
+            if ($trimmed -and $trimmed -notmatch "^Windows Subsystem for Linux") {
+                if (-not $distroNames.Contains($trimmed)) {
+                    $distroNames.Add($trimmed)
+                }
+            }
+        }
+    }
+    return @($distroNames)
+}
+
+function Is-DistroInstalled {
+    $currentList = Get-InstalledDistros
+    return $currentList -contains $distroName
+}
+
+function Invoke-WSLCommand {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string[]]$Arguments,
+        [string]$Description = "WSL command"
+    )
+    Log-Message "Running: wsl.exe $($Arguments -join ' ')"
+    $output = @(& wsl.exe @Arguments 2>&1)
+    $exitCode = $LASTEXITCODE
+    foreach ($line in $output) {
+        if ($null -ne $line -and $line.ToString().Trim()) {
+            Log-Message "WSL: $($line.ToString().Trim())"
+        }
+    }
+    if ($exitCode -ne 0) {
+        Log-Message "ERROR: $Description failed with exit code $exitCode."
+        return $false
+    }
+    Log-Message "$Description completed successfully."
+    return $true
+}
+
+function Test-DistroOperational {
+    Log-Message "Testing that $distroName can start."
+    $output = @(& wsl.exe --distribution $distroName --exec uname -r 2>&1)
+    $exitCode = $LASTEXITCODE
+    foreach ($line in $output) {
+        if ($null -ne $line -and $line.ToString().Trim()) {
+            Log-Message "Linux kernel: $($line.ToString().Trim())"
+        }
+    }
+    if ($exitCode -ne 0) {
+        Log-Message "ERROR: Distro could not be started. Exit code: $exitCode."
+        return $false
+    }
+    return $true
+}
+
+function Remove-DistroCleanly {
+    param ([string]$TargetDistro)
+    Log-Message "Preparing to purge distro: $TargetDistro"
+    $maxAttempts = 3
+    $unregistered = $false
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        $currentDistros = Get-InstalledDistros
+        if ($currentDistros -notcontains $TargetDistro) {
+            $unregistered = $true
+            break
+        }
+        Log-Message "Unregister attempt $attempt of $maxAttempts for $TargetDistro."
+        
+        # Force-kill user-space background hosts holding file locks on the distro
+        Stop-Process -Name "wslhost" -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 1
+
+        $unregisterOutput = @(& wsl.exe --unregister $TargetDistro 2>&1)
+        if ($LASTEXITCODE -eq 0) {
+            $unregistered = $true
+            break
+        }
+        Start-Sleep -Seconds 2
+    }
+    return $unregistered
+}
+
 # =========================================================
 # Validation
 # =========================================================
@@ -64,115 +128,84 @@ if (-not $Action) {
     exit 1
 }
 
-if ($Action -eq "Install") {
+if ($Action -notin @("Install", "Uninstall")) {
+    Log-Message "ERROR: Invalid action specified: $Action"
+    exit 1
+}
 
+if ($Action -eq "Install") {
     if (-not $BinaryPath) {
         Log-Message "ERROR: No binary path specified."
         exit 1
     }
-
-    if (-not (Test-Path $BinaryPath)) {
-        Log-Message "ERROR: Binary path not found."
+    if (-not (Test-Path -LiteralPath $BinaryPath -PathType Leaf)) {
+        Log-Message "ERROR: TAR file not found: $BinaryPath"
         exit 1
     }
 }
 
 # =========================================================
-# Main
+# Main Execution Block
 # =========================================================
 
 try {
+    if ($Action -eq "Install") {
+        Log-Message "Starting clean-slate installation of $AppName."
+        
+        # 1. Force Shutdown to Release File Locks globally
+        Log-Message "Executing global WSL shutdown."
+        & wsl.exe --shutdown 2>&1 | Out-Null
+        Stop-Process -Name "wslhost" -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 2
 
-    switch ($Action) {
-
-        "Install" {
-
-            if (Is-DistroInstalled) {
-                Log-Message "$AppName already installed. Skipping."
-                exit 0
+        # 2. Detect and Purge ALL Existing Distributions
+        $existingDistros = Get-InstalledDistros
+        if ($existingDistros.Count -gt 0) {
+            foreach ($distro in $existingDistros) {
+                $null = Remove-DistroCleanly -TargetDistro $distro
             }
+        }
 
-            Log-Message "Checking WSL availability"
-
-            wsl --status | Out-Null
-
-            Log-Message "Updating WSL"
-
-            wsl --update | Out-Null
-
-            if (-not (Test-Path $installPath)) {
-                New-Item -ItemType Directory -Path $installPath -Force | Out-Null
+        # 3. Storage Directory Deep Clean
+        if (Test-Path -LiteralPath $installPath) {
+            try {
+                Remove-Item -LiteralPath $installPath -Recurse -Force -ErrorAction Stop
             }
-
-            $TarFile = (Resolve-Path $BinaryPath).Path
-
-            Log-Message "Importing distro $distroName"
-
-            wsl --import `
-                $distroName `
-                $installPath `
-                $TarFile `
-                --version 2
-
-            Start-Sleep -Seconds 5
-
-            if (Is-DistroInstalled) {
-                Log-Message "$AppName installation completed successfully."
-                exit 0
+            catch {
+                Log-Message "ERROR: Failed to wipe folder $installPath."
+                exit 1
             }
+        }
+        New-Item -ItemType Directory -Path $installPath -Force | Out-Null
 
-            Log-Message "ERROR: Installation failed."
+        # 4. Clean Import of the Corporate Golden Image
+        $importArgs = @("--import", $distroName, $installPath, $BinaryPath, "--version", "2")
+        $importSuccess = Invoke-WSLCommand -Arguments $importArgs -Description "Golden Image Import"
+        if (-not $importSuccess) {
             exit 1
         }
 
-        "Uninstall" {
+        # 5. Set as system default
+        & wsl.exe --set-default $distroName 2>&1 | Out-Null
 
-            Log-Message "Starting uninstallation"
-
-            wsl --shutdown 2>$null
-
-            Start-Sleep -Seconds 2
-
-            if (Is-DistroInstalled) {
-
-                Log-Message "Unregistering distro $distroName"
-
-                wsl --unregister $distroName
-
-                Start-Sleep -Seconds 5
-            }
-
-            if (Test-Path $installPath) {
-
-                Log-Message "Removing local files"
-
-                Remove-Item `
-                    -Path $installPath `
-                    -Recurse `
-                    -Force `
-                    -ErrorAction SilentlyContinue
-            }
-
-            Start-Sleep -Seconds 2
-
-            if (-not (Is-DistroInstalled)) {
-                Log-Message "$AppName uninstallation completed successfully."
-                exit 0
-            }
-
-            Log-Message "ERROR: Distro still registered."
+        # 6. Post-Installation Check
+        if (-not (Test-DistroOperational)) {
             exit 1
         }
 
-        Default {
-
-            Log-Message "ERROR: Invalid action specified."
-            exit 1
+        Log-Message "SUCCESS: Deployment completed."
+        exit 0
+    }
+    elseif ($Action -eq "Uninstall") {
+        Log-Message "Starting uninstallation of $AppName."
+        $cleanupSuccess = Remove-DistroCleanly -TargetDistro $distroName
+        if ($cleanupSuccess) {
+            exit 0
         }
+        exit 1
     }
 }
 catch {
-
-    Log-Message "ERROR: $($_.Exception.Message)"
+    Log-Message "UNHANDLED CRITICAL EXCEPTION: $($_.Exception.Message)"
     exit 1
 }
