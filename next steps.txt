@@ -1,0 +1,1747 @@
+Yes. I went through the **entire 21-page document**, including the risk assessment, Intune deployment model, golden-image build/export process, root-access limitations, Wazuh/Ansible recommendations, Cisco Secure Access requirements, validation steps, and Appendix A policy set. 
+
+Below is the **clean, professional procedure I would use to build the golden image from a fresh reference PC**, specifically so the resulting `.tar` can be consumed by your existing `WSL.ps1` deployment script.
+
+---
+
+# Array Innovation — WSL2 Golden Image Build Procedure
+
+## 0. What you are building
+
+The final flow should look like this:
+
+```text
+FRESH REFERENCE PC
+        │
+        ▼
+Windows 11 22H2+
+        │
+        ▼
+Enable WSL2 + Virtual Machine Platform
+        │
+        ▼
+Install Ubuntu 24.04 LTS
+        │
+        ▼
+Patch Ubuntu completely
+        │
+        ▼
+Create standard non-root user
+        │
+        ▼
+Configure /etc/wsl.conf
+        │
+        ▼
+Install required security/management tooling
+        │
+        ▼
+Remove unnecessary services/accounts
+        │
+        ▼
+Validate Cisco + WSL networking
+        │
+        ▼
+Create package manifest
+        │
+        ▼
+Clean shutdown
+        │
+        ▼
+wsl --export
+        │
+        ▼
+Array-Linux-GoldenImage-vX.tar
+        │
+        ▼
+Your WSL.ps1
+        │
+        ▼
+Intune .intunewin
+```
+
+The document explicitly defines the golden image as the **known-good, pre-hardened and pre-configured baseline** used for controlled deployment. 
+
+---
+
+# PHASE 1 — Prepare the reference PC
+
+## 1. Use a dedicated reference machine
+
+Do **not** build the image directly on a normal employee production PC.
+
+Use:
+
+* A fresh Windows 11 machine
+* IT-controlled
+* Preferably a VM or dedicated test/reference PC
+* No employee data
+* No personal files
+* No personal SSH keys
+* No personal cloud credentials
+* No production secrets
+
+The document specifically calls for a **single IT-controlled reference machine that is not a production endpoint**. 
+
+---
+
+# PHASE 2 — Verify Windows baseline
+
+## 2. Confirm Windows version
+
+Open **PowerShell as Administrator**:
+
+```powershell
+winver
+```
+
+You want:
+
+```text
+Windows 11 22H2 or later
+```
+
+This is important because the document's Cisco Secure Access mitigation depends on Windows 11 22H2+ and WSL 2.0.9+. Windows 10 is specifically considered ineligible for this WSL deployment model because mirrored networking isn't available there. 
+
+---
+
+## 3. Fully update Windows
+
+Before building anything:
+
+**Settings → Windows Update → Check for updates**
+
+Install everything available.
+
+Restart when required.
+
+Then check again.
+
+Do not start building the Linux image until Windows itself is fully patched.
+
+---
+
+# PHASE 3 — Install/enable WSL2
+
+## 4. Enable the required Windows components
+
+Open **PowerShell as Administrator**.
+
+Run:
+
+```powershell
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+```
+
+Then:
+
+```powershell
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+```
+
+These are the two required Windows components identified in the document. 
+
+Restart the PC:
+
+```powershell
+Restart-Computer
+```
+
+---
+
+## 5. Confirm WSL
+
+After reboot:
+
+```powershell
+wsl --status
+```
+
+Then:
+
+```powershell
+wsl --version
+```
+
+You want WSL 2 available.
+
+The document requires **WSL 2.0.9 or later** for the mirrored-networking configuration. 
+
+---
+
+# PHASE 4 — Install Ubuntu 24.04 LTS
+
+## 6. Install the approved base distribution
+
+The document gives **Ubuntu 24.04 LTS** as the example base distribution. 
+
+On the reference PC you can install it through the Microsoft Store or use an official rootfs.
+
+For your project, since your existing deployment is based on an exported `.tar`, I'd use the Ubuntu installation on the reference PC and then export the finished distro.
+
+After installation:
+
+```powershell
+wsl -l -v
+```
+
+You should see something similar to:
+
+```text
+NAME      STATE      VERSION
+Ubuntu    Stopped    2
+```
+
+If it says version 1:
+
+```powershell
+wsl --set-version Ubuntu 2
+```
+
+---
+
+# PHASE 5 — First Ubuntu configuration
+
+## 7. Launch Ubuntu
+
+Run:
+
+```powershell
+wsl -d Ubuntu
+```
+
+Complete the initial Ubuntu setup.
+
+Create your temporary build account.
+
+For example:
+
+```text
+corpuser
+```
+
+**Important:** the document's example uses `corpuser`; you can use your organization's approved username instead. 
+
+---
+
+# PHASE 6 — PATCH THE GOLDEN IMAGE FIRST
+
+## 8. Update package repositories
+
+Inside Ubuntu:
+
+```bash
+sudo apt update
+```
+
+Then:
+
+```bash
+sudo apt full-upgrade -y
+```
+
+Then:
+
+```bash
+sudo apt autoremove -y
+```
+
+Then:
+
+```bash
+sudo apt clean
+```
+
+The document explicitly says the base OS should be fully patched with:
+
+```bash
+apt update && apt full-upgrade
+```
+
+**before making further image changes.** 
+
+---
+
+# PHASE 7 — Create the standard user
+
+## 9. Create your standard non-root user
+
+If you haven't already created one:
+
+```bash
+sudo adduser corpuser
+```
+
+Do **not** automatically add it to sudo.
+
+The document specifically recommends:
+
+> Do not add the default user to sudoers unless the role requires it. 
+
+So don't do:
+
+```bash
+sudo usermod -aG sudo corpuser
+```
+
+unless this particular image is intentionally an engineering/admin variant.
+
+---
+
+# PHASE 8 — Configure `/etc/wsl.conf`
+
+This is particularly important given the duplicate-key warning you showed me earlier.
+
+## 10. Create ONE clean `/etc/wsl.conf`
+
+Inside Ubuntu:
+
+```bash
+sudo nano /etc/wsl.conf
+```
+
+Use a clean configuration such as:
+
+```ini
+[boot]
+systemd=true
+
+[user]
+default=corpuser
+
+[network]
+generateResolvConf=false
+```
+
+The document gives this structure as the golden-image baseline. 
+
+### IMPORTANT
+
+Do **not** accidentally create:
+
+```ini
+[boot]
+systemd=true
+
+[boot]
+systemd=true
+```
+
+or:
+
+```ini
+[user]
+default=corpuser
+
+[user]
+default=corpuser
+```
+
+That is exactly the type of duplicate configuration that produced the warning you showed earlier.
+
+You want **one `[boot]`, one `[user]`, one `[network]` section**.
+
+Save:
+
+```text
+CTRL + O
+ENTER
+CTRL + X
+```
+
+---
+
+# PHASE 9 — Configure systemd
+
+## 11. Confirm systemd works
+
+Exit Ubuntu:
+
+```bash
+exit
+```
+
+Then from PowerShell:
+
+```powershell
+wsl --shutdown
+```
+
+Start it again:
+
+```powershell
+wsl -d Ubuntu
+```
+
+Inside Ubuntu:
+
+```bash
+systemctl is-system-running
+```
+
+You want it to indicate that systemd is operating.
+
+---
+
+# PHASE 10 — Remove unnecessary components
+
+## 12. Keep the golden image minimal
+
+The document explicitly recommends removing/disabling:
+
+* unnecessary services
+* SSH server unless specifically required
+* default/sample accounts
+
+
+
+For example, if you don't need SSH:
+
+```bash
+sudo systemctl disable ssh
+```
+
+And if SSH isn't installed, don't install it simply because it might be useful later.
+
+**Golden-image rule: install only what the approved workload requires.**
+
+---
+
+# PHASE 11 — Security/management tooling
+
+This is where your organization-specific components come in.
+
+The document recommends:
+
+### Microsoft Defender for Endpoint WSL plugin
+
+This provides security-event monitoring inside running WSL distributions. 
+
+### Wazuh
+
+For:
+
+* Security monitoring
+* File Integrity Monitoring
+* Vulnerability detection
+* Configuration assessment
+* Linux-side visibility
+
+
+
+### Ansible
+
+For:
+
+* Linux patching
+* Configuration management
+* Drift correction
+* Approved/banned package enforcement
+
+
+
+---
+
+# PHASE 12 — Wazuh
+
+## 13. If Wazuh is already available in your environment
+
+Install/configure the Wazuh agent according to your organization's Wazuh deployment.
+
+The document's intended model is:
+
+```text
+Golden Image
+     │
+     └── Wazuh Agent
+             │
+             ▼
+       Wazuh Manager
+```
+
+It recommends having monitoring begin from first boot. 
+
+### Security warning
+
+Your document says the Wazuh enrollment key may be embedded in the image and the package should therefore be access-controlled. 
+
+Professionally, treat that `.tar` as **sensitive IT infrastructure content**.
+
+Do NOT put:
+
+```text
+passwords
+SSH private keys
+API tokens
+Azure credentials
+AWS credentials
+personal credentials
+```
+
+into the image.
+
+The document itself identifies credential sprawl as a security risk. 
+
+---
+
+# PHASE 13 — Patch-management baseline
+
+## 14. Install your approved Linux patch mechanism
+
+The document recommends either:
+
+* unattended-upgrades
+* Ansible/ansible-pull
+
+
+
+If using unattended upgrades, install it:
+
+```bash
+sudo apt install unattended-upgrades -y
+```
+
+Then configure according to your organization's Linux patching policy.
+
+If Array already has Ansible, use the organization's existing Ansible repository/playbook instead.
+
+The document recommends a recurring `ansible-pull` process for daily configuration/patch enforcement. 
+
+---
+
+# PHASE 14 — Create the package manifest
+
+## 15. Record exactly what's inside the image
+
+This is **important for professional image management**.
+
+Inside Ubuntu:
+
+```bash
+sudo mkdir -p /opt/corp
+```
+
+Then:
+
+```bash
+dpkg -l | sudo tee /opt/corp/image-manifest.txt
+```
+
+The document explicitly recommends:
+
+```bash
+dpkg -l > /opt/corp/image-manifest.txt
+```
+
+to establish a baseline that can be compared against future image versions. 
+
+You can additionally record:
+
+```bash
+cat /etc/os-release
+```
+
+and:
+
+```bash
+uname -r
+```
+
+for your own build documentation.
+
+---
+
+# PHASE 15 — Configure WSL host networking
+
+This part is **NOT supposed to be baked into the Linux `.tar`**.
+
+This distinction is extremely important.
+
+The document says the following are **host-level WSL settings**:
+
+```ini
+[wsl2]
+networkingMode=mirrored
+dnsTunneling=true
+autoProxy=true
+firewall=true
+```
+
+
+
+They should ultimately be enforced through **Intune**, not merely placed inside the distro image.
+
+---
+
+# PHASE 16 — Cisco Secure Access validation
+
+This is a mandatory part of your professional validation.
+
+Your environment uses Cisco Secure Access/Umbrella, and the document identifies a potential WSL networking bypass if WSL remains in normal NAT mode. 
+
+The required configuration is:
+
+```ini
+[wsl2]
+networkingMode=mirrored
+dnsTunneling=true
+autoProxy=true
+firewall=true
+```
+
+The corresponding Intune policies should lock these settings so users cannot revert to NAT or change firewall configuration. 
+
+### Do NOT just manually configure this and assume you're done.
+
+The final enterprise design should be:
+
+```text
+Golden Image
+     │
+     └── Linux configuration
+
+Intune
+     │
+     └── WSL host/network configuration
+             │
+             ├── mirrored
+             ├── dnsTunneling
+             ├── autoProxy
+             └── firewall
+```
+
+---
+
+# PHASE 17 — Cisco validation
+
+Once the image is running with Cisco Secure Client active, perform the document's three tests.
+
+### Test 1 — DNS
+
+Inside WSL:
+
+```bash
+nslookup <approved-test-domain>
+```
+
+Use an organizational test domain/category that Cisco Umbrella is configured to log/block.
+
+Verify that it is blocked/logged as expected.
+
+### Test 2 — Cisco dashboard
+
+Check the Secure Access/Umbrella dashboard.
+
+Confirm traffic generated from WSL appears as traffic associated with the Windows host.
+
+### Test 3 — HTTP/HTTPS
+
+From WSL, make a request to an organizationally controlled test destination:
+
+```bash
+curl https://<approved-test-domain>
+```
+
+Confirm Cisco SWG policy applies.
+
+These exact validation objectives are specified in Section 10.6. 
+
+---
+
+# PHASE 18 — Final security cleanup
+
+Before exporting, check the image for anything that should **never** go into a golden image.
+
+Inside Ubuntu:
+
+```bash
+history
+```
+
+Look for commands containing:
+
+```text
+password
+token
+secret
+apikey
+ssh
+az login
+aws configure
+```
+
+Also check:
+
+```bash
+ls -la ~/.ssh
+```
+
+and:
+
+```bash
+ls -la ~/.aws 2>/dev/null
+```
+
+and:
+
+```bash
+ls -la ~/.azure 2>/dev/null
+```
+
+There should be **no personal/private credentials**.
+
+This is particularly important because the document specifically identifies SSH keys and cloud/API tokens in Linux home directories as a credential-sprawl risk. 
+
+---
+
+# PHASE 19 — Check the default user
+
+Run:
+
+```bash
+whoami
+```
+
+You should get:
+
+```text
+corpuser
+```
+
+or whatever approved standard user you created.
+
+Then:
+
+```bash
+id
+```
+
+Make sure it is **not unnecessarily privileged**.
+
+---
+
+# PHASE 20 — Check Ubuntu identity
+
+Run:
+
+```bash
+cat /etc/os-release
+```
+
+You should have:
+
+```text
+NAME="Ubuntu"
+VERSION_ID="24.04"
+```
+
+The compliance plugin specifically relies on standard `/etc/os-release` information, so the document says this must be verified during golden-image testing. 
+
+---
+
+# PHASE 21 — Check WSL configuration
+
+Run:
+
+```bash
+cat /etc/wsl.conf
+```
+
+You want one clean configuration.
+
+For example:
+
+```ini
+[boot]
+systemd=true
+
+[user]
+default=corpuser
+
+[network]
+generateResolvConf=false
+```
+
+No duplicate sections.
+
+---
+
+# PHASE 22 — Shut down cleanly
+
+This is important.
+
+Exit Ubuntu:
+
+```bash
+exit
+```
+
+Then from **Windows PowerShell**:
+
+```powershell
+wsl --shutdown
+```
+
+The document specifically says to shut the instance down cleanly before exporting. 
+
+---
+
+# PHASE 23 — Identify the build distro
+
+Before exporting, run:
+
+```powershell
+wsl -l -v
+```
+
+For example:
+
+```text
+NAME                         STATE      VERSION
+Ubuntu                       Stopped    2
+```
+
+You can use your build distro name here.
+
+---
+
+# PHASE 24 — Export the golden image
+
+Create a build directory:
+
+```powershell
+New-Item -ItemType Directory -Force C:\Build
+```
+
+Then export:
+
+```powershell
+wsl --export Ubuntu C:\Build\Array-Linux-GoldenImage-v1.0.tar
+```
+
+The document's example uses this same export/import model and explicitly recommends versioning the `.tar`. 
+
+---
+
+# PHASE 25 — Verify the TAR
+
+Check:
+
+```powershell
+Get-Item C:\Build\Array-Linux-GoldenImage-v1.0.tar |
+Select-Object Name, Length, LastWriteTime
+```
+
+Make sure:
+
+* file exists
+* file size is reasonable
+* timestamp is current
+
+Do **not** immediately delete your reference distro.
+
+Keep it until the exported image has passed deployment testing.
+
+---
+
+# PHASE 26 — Test the actual exported image
+
+This is something I strongly recommend before putting it into Intune.
+
+Create a temporary test destination:
+
+```powershell
+New-Item -ItemType Directory -Force C:\WSL\Test-Array-Linux-GoldenImage
+```
+
+Import it:
+
+```powershell
+wsl --import Array-Linux-GoldenImage-Test C:\WSL\Test-Array-Linux-GoldenImage C:\Build\Array-Linux-GoldenImage-v1.0.tar --version 2
+```
+
+Then:
+
+```powershell
+wsl -d Array-Linux-GoldenImage-Test
+```
+
+Test:
+
+```bash
+cat /etc/os-release
+```
+
+```bash
+whoami
+```
+
+```bash
+uname -r
+```
+
+```bash
+cat /etc/wsl.conf
+```
+
+Then test your required applications/tooling.
+
+---
+
+# PHASE 27 — Test the exact deployment naming
+
+This is particularly relevant to **your existing `WSL.ps1`**.
+
+Your script is doing something along the lines of:
+
+```powershell
+wsl --import Array-Linux-GoldenImage-v1 ...
+```
+
+So the golden image itself does **not necessarily have to be named the same thing internally**.
+
+The important thing is that your script's:
+
+```text
+-BinaryPath
+```
+
+points to the actual `.tar`.
+
+For example:
+
+```text
+Array-Linux-GoldenImage-v1.0.tar
+```
+
+and your command might reference:
+
+```powershell
+-BinaryPath ".\Array-Linux-GoldenImage-v1.0.tar"
+```
+
+**Do not randomly rename the TAR after writing the Intune command.** Keep the filename consistent between:
+
+```text
+package folder
+       ↓
+WSL.ps1 BinaryPath
+       ↓
+Intune package
+```
+
+---
+
+# PHASE 28 — Your final package structure
+
+For your current university-standard structure, I would keep it like this:
+
+```text
+C:\WSLDeployment\
+│
+├── WSL.ps1
+│
+├── Array-Linux-GoldenImage-v1.0.tar
+│
+├── Intune-Install-cmd
+│
+└── Intune-Uninstall-cmd
+```
+
+### Actual deployment components
+
+**Required:**
+
+```text
+WSL.ps1
+Array-Linux-GoldenImage-v1.0.tar
+```
+
+**Reference files:**
+
+```text
+Intune-Install-cmd
+Intune-Uninstall-cmd
+```
+
+Your `.cmd` files aren't what actually performs the deployment if your `WSL.ps1` already contains both `Install` and `Uninstall` actions.
+
+---
+
+# PHASE 29 — Package with IntuneWinAppUtil
+
+Once the `.tar` and `WSL.ps1` are finalized, package the folder using Microsoft's Win32 Content Prep Tool.
+
+The document specifically recommends putting the `.tar` **inside the Win32 package alongside the installation script**, rather than depending on an on-premises file share. 
+
+Your resulting package is:
+
+```text
+WSLDeployment
+      │
+      ├── WSL.ps1
+      ├── Array-Linux-GoldenImage-v1.0.tar
+      ├── Intune-Install-cmd
+      └── Intune-Uninstall-cmd
+                 │
+                 ▼
+          WSLDeployment.intunewin
+```
+
+---
+
+# PHASE 30 — Intune configuration
+
+Your Win32 app should use:
+
+### Setup file
+
+```text
+WSL.ps1
+```
+
+### Install command
+
+Use your existing install command, for example:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\WSL.ps1 -Action Install -AppName "WSL Ubuntu" -BinaryPath ".\Array-Linux-GoldenImage-v1.0.tar"
+```
+
+### Uninstall command
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\WSL.ps1 -Action Uninstall -AppName "WSL Ubuntu" -BinaryPath ".\Array-Linux-GoldenImage-v1.0.tar"
+```
+
+The exact arguments should match the parameters implemented in **your current `WSL.ps1`**.
+
+---
+
+# PHASE 31 — Detection rule
+
+Your detection rule should verify that the imported distro exists.
+
+The document gives the example of detecting:
+
+```text
+C:\WSL\Array-Linux-GoldenImage
+```
+
+
+
+For your script, however, use the **actual installation path your script creates**.
+
+From your screenshots, your current script creates:
+
+```text
+C:\WSL\Array-Linux-GoldenImage-v1
+```
+
+So your detection rule should correspond to the actual path used by the script.
+
+---
+
+# PHASE 32 — Intune security policies
+
+After deployment, don't stop at the `.tar`.
+
+The document's Appendix A recommends these WSL controls:
+
+| Setting                                        | Recommended  |
+| ---------------------------------------------- | ------------ |
+| Allow Windows Subsystem for Linux              | **Enabled**  |
+| Allow Inbox version of WSL                     | **Disabled** |
+| Allow WSL1                                     | **Disabled** |
+| Allow debug shell                              | **Disabled** |
+| Allow passthrough disk mount                   | **Disabled** |
+| Allow custom kernel configuration              | **Disabled** |
+| Allow kernel command line configuration        | **Disabled** |
+| Allow custom system distribution configuration | **Disabled** |
+| Allow custom networking configuration          | **Disabled** |
+| Allow user setting firewall configuration      | **Disabled** |
+| Allow nested virtualization                    | **Disabled** |
+| Allow kernel debugging                         | **Disabled** |
+
+These are the document's recommended hardened Settings Catalog values. 
+
+---
+
+# PHASE 33 — WSL compliance
+
+Your environment should also use the **Intune WSL compliance plugin**.
+
+Configure the approved distro/version, for example:
+
+```text
+Distribution:
+Array-Linux-GoldenImage
+
+Version:
+your approved image/version
+```
+
+The document specifically recommends using the compliance plugin to allowlist approved Linux distributions and versions and then connect noncompliance to Entra Conditional Access. 
+
+One important detail:
+
+**The distro must be launched at least once** for compliance evaluation. 
+
+Your deployment process should therefore launch it during provisioning/testing rather than importing it with `--no-launch`.
+
+---
+
+# PHASE 34 — Defender for Endpoint
+
+Deploy/enable the MDE WSL plugin for the appropriate device group.
+
+The document explicitly distinguishes:
+
+```text
+MDE WSL Plugin
+       ↓
+Security monitoring
+
+Intune WSL Compliance Plugin
+       ↓
+Distro/version compliance
+```
+
+They are **not the same thing** and the document recommends deploying both. 
+
+---
+
+# PHASE 35 — Final acceptance test
+
+Before calling the golden image **PRODUCTION READY**, test all of these:
+
+### WSL
+
+```powershell
+wsl -l -v
+```
+
+Expected:
+
+```text
+VERSION 2
+```
+
+### Ubuntu
+
+```bash
+cat /etc/os-release
+```
+
+Expected:
+
+```text
+Ubuntu 24.04 LTS
+```
+
+### User
+
+```bash
+whoami
+```
+
+Expected:
+
+```text
+corpuser
+```
+
+### Kernel
+
+```bash
+uname -r
+```
+
+### WSL configuration
+
+```bash
+cat /etc/wsl.conf
+```
+
+### Package baseline
+
+```bash
+cat /opt/corp/image-manifest.txt
+```
+
+### Networking
+
+Test:
+
+```bash
+ping
+```
+
+and:
+
+```bash
+curl
+```
+
+as appropriate for your environment.
+
+### Cisco
+
+Verify:
+
+* DNS policy
+* SWG policy
+* Secure Access logging
+
+The document makes Cisco verification a required part of golden-image validation. 
+
+### Security
+
+Verify:
+
+* MDE WSL visibility
+* Wazuh agent
+* Wazuh manager communication
+* no personal credentials
+* no SSH private keys
+* no cloud API tokens
+
+### Intune
+
+Verify:
+
+* installation
+* detection
+* uninstall
+* reinstall
+* correct distro name
+* correct installation path
+
+---
+
+# PHASE 36 — Test the most important thing: uninstall → reinstall
+
+Since you've already been doing this manually, make it part of your formal acceptance test.
+
+### Test 1
+
+Install:
+
+```text
+Intune install
+      ↓
+WSL imported
+      ↓
+Ubuntu launches
+```
+
+### Test 2
+
+Uninstall:
+
+```text
+Intune uninstall
+      ↓
+WSL distro removed
+      ↓
+installation directory removed
+```
+
+### Test 3
+
+Install again:
+
+```text
+Intune install
+      ↓
+same TAR
+      ↓
+same configuration
+      ↓
+same Ubuntu baseline
+```
+
+If all three work, you've demonstrated that your package is reproducible.
+
+---
+
+# PHASE 37 — Version everything
+
+Do **not** just call everything:
+
+```text
+Array-Linux-GoldenImage.tar
+```
+
+Use:
+
+```text
+Array-Linux-GoldenImage-v1.0.tar
+```
+
+Then later:
+
+```text
+Array-Linux-GoldenImage-v1.1.tar
+Array-Linux-GoldenImage-v1.2.tar
+Array-Linux-GoldenImage-v2.0.tar
+```
+
+The document explicitly recommends retaining previous image and Intune package versions for rollback. 
+
+I'd also keep a small build record:
+
+```text
+Array-Linux-GoldenImage-v1.0
+│
+├── Ubuntu version
+├── WSL version
+├── Windows baseline
+├── Package manifest
+├── Build date
+├── Wazuh version
+├── Ansible baseline
+├── Cisco validation
+└── Tester/approval
+```
+
+---
+
+# One important correction to keep in mind
+
+There are **three different layers** here. Don't mix them up:
+
+### 1. Linux golden image
+
+Stored in:
+
+```text
+Array-Linux-GoldenImage-v1.0.tar
+```
+
+Contains:
+
+```text
+Ubuntu
+packages
+users
+/etc/wsl.conf
+Linux configuration
+Wazuh
+patch tooling
+etc.
+```
+
+### 2. WSL host configuration
+
+Controlled by:
+
+```text
+Intune
+```
+
+Contains:
+
+```text
+mirrored networking
+dnsTunneling
+autoProxy
+firewall
+kernel restrictions
+WSL1 restriction
+debug shell restriction
+disk mount restriction
+etc.
+```
+
+### 3. Deployment script
+
+```text
+WSL.ps1
+```
+
+Responsible for:
+
+```text
+enable WSL
+enable Virtual Machine Platform
+update WSL
+import TAR
+configure deployment
+uninstall distro
+```
+
+The document's deployment architecture explicitly separates these responsibilities. 
+
+---
+
+# The final professional architecture
+
+Your finished solution should therefore look like:
+
+```text
+                    ARRAY INNOVATION
+                           │
+                    ┌──────▼──────┐
+                    │    INTUNE   │
+                    └──────┬──────┘
+                           │
+              ┌────────────┼────────────┐
+              │            │            │
+              ▼            ▼            ▼
+         WSL Policies   WSL Win32    Compliance
+              │          Package       Plugin
+              │            │             │
+              │            ▼             │
+              │        WSL.ps1           │
+              │            │             │
+              │            ▼             │
+              │    Golden Image TAR      │
+              │            │             │
+              └────────────┼─────────────┘
+                           ▼
+                  Array-Linux-GoldenImage
+                           │
+                 ┌─────────┼─────────┐
+                 ▼         ▼         ▼
+              Ubuntu     Wazuh    Patch Mgmt
+              24.04
+                           │
+                 ┌─────────▼─────────┐
+                 │  Cisco Secure     │
+                 │  Access / Umbrella│
+                 └───────────────────┘
+```
+
+This is essentially the architecture described throughout Sections 5–10 of your document. 
+
+## Your immediate next step
+
+**Don't build the TAR yet.** First, on the fresh reference PC, get to this exact state:
+
+```text
+Windows 11 22H2+
+       ↓
+WSL2
+       ↓
+Ubuntu 24.04
+       ↓
+fully patched
+       ↓
+clean non-root default user
+       ↓
+clean /etc/wsl.conf
+       ↓
+required Array tooling
+       ↓
+no credentials/secrets
+       ↓
+Cisco networking tested
+       ↓
+manifest created
+       ↓
+THEN export TAR
+```
+
+That gives you a much safer and reproducible **Array-Linux-GoldenImage-v1.0** rather than simply exporting a random Ubuntu installation.
+
+And one thing I would **not** do: don't copy the current WSL installation you were experimenting with directly into the golden image. Build the reference image cleanly from scratch, because the whole point of the golden image is to establish a known-good baseline. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Yes — and **before you install anything, there's one important distinction**: Wazuh is not something you can meaningfully "enforce" just by putting it into the `.tar`. You need a **Wazuh central server/manager (or Wazuh Cloud)** for the agent to report to.
+
+### What is Wazuh?
+
+Think of it as the **Linux-side security monitoring system** for your WSL distro.
+
+Your setup currently looks like:
+
+```text
+Windows
+ └── Microsoft Defender for Endpoint
+       ↓
+       monitors Windows + WSL integration
+
+WSL Ubuntu
+ └── Wazuh Agent
+       ↓
+       sends Linux security information
+       ↓
+Wazuh Server/Manager
+       ↓
+Wazuh Dashboard
+```
+
+The Wazuh agent collects things such as:
+
+* Linux logs
+* installed software/inventory
+* file changes
+* security configuration
+* vulnerabilities/CVEs
+* suspicious activity
+
+and sends that information to the Wazuh server over an encrypted/authenticated connection. ([Wazuh Documentation][1])
+
+Your document recommends Wazuh specifically because **Windows Update/Intune don't patch or manage the Linux userspace inside WSL**. It proposes Wazuh for monitoring/FIM/vulnerability detection and Ansible for Linux patch/configuration management. 
+
+---
+
+# Do you actually need to install it?
+
+For the **full production design described in your document: yes**.
+
+But there is a prerequisite:
+
+### You need one of these:
+
+**Option A — Array already has a Wazuh server**
+
+```text
+Wazuh Manager
+      ↑
+      │
+ Wazuh Agent
+      ↑
+      │
+WSL Ubuntu
+```
+
+**Option B — Array uses Wazuh Cloud**
+
+```text
+Wazuh Cloud
+      ↑
+      │
+ Wazuh Agent
+      ↑
+      │
+WSL Ubuntu
+```
+
+Wazuh officially supports both self-hosted central components and Wazuh Cloud. ([Wazuh Documentation][2])
+
+**If Array has neither, don't install the agent yet.** Installing an agent without somewhere to send the data doesn't complete the security architecture.
+
+---
+
+# If Array already has Wazuh
+
+Then your golden-image process becomes:
+
+### 1. Install Wazuh Agent inside Ubuntu
+
+The official Linux deployment supports Ubuntu and uses the Wazuh APT repository. ([Wazuh Documentation][3])
+
+### 2. Configure it to communicate with Array's Wazuh Manager
+
+For example, conceptually:
+
+```text
+WAZUH_MANAGER="wazuh.company.internal"
+```
+
+Then install:
+
+```bash
+sudo apt install wazuh-agent
+```
+
+and enable it:
+
+```bash
+sudo systemctl enable wazuh-agent
+sudo systemctl start wazuh-agent
+```
+
+Those are the official installation/startup steps. ([Wazuh Documentation][3])
+
+**But don't run those commands yet** because I don't know Array's actual Wazuh manager address, enrollment method, agent group, or whether you're using Wazuh Cloud.
+
+---
+
+# Very important for your Golden Image
+
+There's a subtle issue here.
+
+You are going to create:
+
+```text
+Array-Linux-GoldenImage-v1.0.tar
+```
+
+and potentially install it on **many PCs**.
+
+You don't want every PC to become:
+
+```text
+WSL-PC-001
+```
+
+with the exact same Wazuh agent identity.
+
+You need each deployed WSL instance to have its **own Wazuh agent enrollment/identity**.
+
+The official Wazuh documentation treats installation and enrollment as separate parts of deploying an agent. ([Wazuh Documentation][4])
+
+Your document says the Wazuh agent should be baked into the golden image and that each WSL instance should enroll automatically at first boot. 
+
+So the professional design should be:
+
+```text
+GOLDEN IMAGE
+     │
+     ├── Wazuh Agent installed
+     │
+     └── First boot
+           │
+           ▼
+     Wazuh enrollment
+           │
+       ┌───┴────┐
+       ▼        ▼
+     PC-001   PC-002
+     Agent    Agent
+     ID       ID
+```
+
+That way each employee/device is individually visible in Wazuh.
+
+---
+
+# What does Wazuh actually give you?
+
+For your WSL environment, some of the most useful features are:
+
+### File Integrity Monitoring
+
+If something changes a monitored file:
+
+```text
+/etc/...
+/home/...
+/opt/...
+```
+
+Wazuh can detect the change and generate an alert. ([Wazuh Documentation][5])
+
+### Vulnerability detection
+
+Wazuh collects installed-package information and compares it against known vulnerability information/CVEs. ([Wazuh Documentation][6])
+
+So you could eventually see something like:
+
+```text
+Array-Linux-GoldenImage
+        │
+        ├── Ubuntu 24.04
+        ├── package A
+        ├── package B
+        ├── package C
+        │
+        └── Wazuh
+              ↓
+        CVE detected
+              ↓
+        IT Dashboard
+```
+
+### Security configuration
+
+It can also perform security configuration assessment and collect system inventory. ([Wazuh Documentation][7])
+
+---
+
+# Wazuh vs Defender — why both?
+
+This is important because you might wonder:
+
+> "If we already have Microsoft Defender, why do we need Wazuh?"
+
+Your document deliberately recommends **both**, because they're serving different roles:
+
+| Tool                                           | Main role                                                                      |
+| ---------------------------------------------- | ------------------------------------------------------------------------------ |
+| **Microsoft Defender for Endpoint WSL plugin** | Security-event visibility/integration with Microsoft's endpoint security stack |
+| **Wazuh**                                      | Linux-side FIM, vulnerability detection, configuration assessment, logs        |
+| **Ansible**                                    | Linux patching/configuration enforcement                                       |
+| **Intune**                                     | Windows/WSL platform configuration and deployment                              |
+
+The document explicitly says the MDE WSL plugin and Wazuh complement each other rather than replace each other. 
+
+---
+
+# So what should YOU do right now?
+
+**Don't install Wazuh yet.**
+
+First find out:
+
+> **Does Array Innovation already have a Wazuh Manager/server or Wazuh Cloud environment?**
+
+If you're the person designing this from scratch and Array **doesn't currently have Wazuh**, then we need to decide whether you're actually expected to deploy the Wazuh infrastructure too.
+
+If there is no existing Wazuh infrastructure, your architecture would be:
+
+```text
+                ARRAY IT
+                   │
+        ┌──────────┴──────────┐
+        │                     │
+   Windows Security       Linux Security
+        │                     │
+       MDE                  Wazuh
+        │                     │
+        │               Wazuh Agent
+        │                     │
+        └─────── WSL2 ────────┘
+                   │
+              Ubuntu 24.04
+```
+
+And **then** we can build Wazuh properly instead of putting a half-configured agent into your golden image.
+
+### One thing I'd do next
+
+Ask whoever manages your infrastructure:
+
+> **"Do we currently have a Wazuh Manager/server or Wazuh Cloud instance for endpoint monitoring? If yes, can I get the Wazuh manager hostname, enrollment method, and agent group intended for WSL endpoints?"**
+
+Once you have that information, I can give you the **exact Wazuh setup for your golden image**, including **installation → enrollment → first-boot handling → verification → how to prevent cloned WSL images from sharing the same Wazuh identity → how it fits into your `WSL.ps1`/Intune package**.
+
+[1]: https://documentation.wazuh.com/current/getting-started/architecture.html?utm_source=chatgpt.com "Architecture - Getting started with Wazuh · Wazuh documentation"
+[2]: https://documentation.wazuh.com/current/installation-guide/index.html?utm_source=chatgpt.com "Installation guide · Wazuh documentation"
+[3]: https://documentation.wazuh.com/current/installation-guide/wazuh-agent/wazuh-agent-package-linux.html?utm_source=chatgpt.com "Deploying Wazuh agents on Linux endpoints - Wazuh agent"
+[4]: https://documentation.wazuh.com/current/user-manual/agent/index.html?utm_source=chatgpt.com "Wazuh agent - User manual · Wazuh documentation"
+[5]: https://documentation.wazuh.com/current/user-manual/capabilities/file-integrity/how-it-works.html?utm_source=chatgpt.com "How it works - File integrity monitoring · Wazuh documentation"
+[6]: https://documentation.wazuh.com/current/user-manual/capabilities/vulnerability-detection/how-it-works.html?utm_source=chatgpt.com "How it works - Vulnerability detection · Wazuh documentation"
+[7]: https://documentation.wazuh.com/current/installation-guide/wazuh-agent/index.html?utm_source=chatgpt.com "Wazuh agent - Installation guide · Wazuh documentation"
+
+
